@@ -52,6 +52,11 @@ SHOP_ITEMS = {
 
 SAVE_FILE = "savegame.json"
 
+BASAK = {
+    "isim": "Başak",
+    "aciklama": "Sevimli ve cesur bir yol arkadaşı. Yanındayken saldırın ve savunman güçlenir.",
+}
+
 ITEMLER = {isim: {k: v for k, v in veri.items() if k not in ("fiyat", "aciklama")} for isim, veri in SHOP_ITEMS.items()}
 
 TAMAMONLAR = [
@@ -126,6 +131,7 @@ class Player:
         self.temp_attack = 0
         self.temp_defense = 0
         self.tamamonlar = []
+        self.companion = None
 
     def is_alive(self):
         return self.hp > 0
@@ -134,11 +140,11 @@ class Player:
         self.hp = min(self.max_hp, self.hp + amount)
 
     def effective_attack(self):
-        bonus = self.temp_attack + (1 if self.has_talsim else 0)
+        bonus = self.temp_attack + (1 if self.has_talsim else 0) + (2 if self.companion else 0)
         return self.attack + bonus
 
     def effective_defense(self):
-        return self.defense + self.temp_defense
+        return self.defense + self.temp_defense + (1 if self.companion else 0)
 
     def reset_temporary_effects(self):
         self.temp_attack = 0
@@ -154,6 +160,8 @@ class Player:
         if self.has_talsim:
             status += ", Tılsım: Evet"
         status += f", Altın: {self.gold}, Eşya: {len(self.inventory)}, Tamamon: {len(self.tamamonlar)}"
+        if self.companion:
+            status += f", Yoldaş: {self.companion['isim']}"
         return status
 
     def item_counts(self):
@@ -252,6 +260,7 @@ class Player:
             "temp_attack": self.temp_attack,
             "temp_defense": self.temp_defense,
             "tamamonlar": self.tamamonlar,
+            "companion": self.companion,
         }
 
     @classmethod
@@ -268,6 +277,7 @@ class Player:
         player.temp_attack = data.get("temp_attack", player.temp_attack)
         player.temp_defense = data.get("temp_defense", player.temp_defense)
         player.tamamonlar = data.get("tamamonlar", player.tamamonlar)
+        player.companion = data.get("companion", player.companion)
         return player
 
 
@@ -360,6 +370,23 @@ def village_shop(player):
             print("Geçersiz seçim. Lütfen tekrar dene.")
 
 
+def basak_ile_tanis(player):
+    if player.companion:
+        print(f"\n{player.companion['isim']} zaten yanında, birlikte maceraya devam ediyorsunuz.")
+        return
+
+    print_header("Sevimli Kız Başak")
+    print("Kasabanın kenarında duran neşeli bir kız seni fark ediyor.")
+    print('"Merhaba! Ben Başak. Ejderha Adası\'na gidiyorsan sana katılabilirim, birlikte daha güçlü oluruz!"')
+    secim = input("Başak'ı yol arkadaşın yapmak ister misin? (e/h): ").strip().lower()
+
+    if secim == "e":
+        player.companion = dict(BASAK)
+        print("Başak artık senin yol arkadaşın! Maceranda saldırın ve savunman güçlendi.")
+    else:
+        print("Başak'a görüşürüz dedin. İstersen daha sonra tekrar buraya gelebilirsin.")
+
+
 def village_tavern(player):
     print_header("Kervan Hanı")
     print("Eski bir kâhin sana adanın gizli patikalarından bahsediyor.")
@@ -398,7 +425,8 @@ def handle_village_choice(player, sec):
             print("  1. Mini oyun oyna")
             print("  2. Pazar yeri")
             print("  3. Kâhinin hikayesini dinle")
-            print("  4. Geri dön")
+            print("  4. Başak ile tanış")
+            print("  5. Geri dön")
             sec2 = input("Seçimin: ").strip()
             if sec2 == "1":
                 play_village_games(player)
@@ -407,6 +435,8 @@ def handle_village_choice(player, sec):
             elif sec2 == "3":
                 village_tavern(player)
             elif sec2 == "4":
+                basak_ile_tanis(player)
+            elif sec2 == "5":
                 break
             else:
                 print("Geçersiz seçim.")
@@ -440,6 +470,8 @@ def dusman_uret(zorluk=1):
 def savas(player, enemy):
     print_header(f"Savaş - {enemy['isim']}")
     print(f"Düşman: {enemy['isim']} - HP: {enemy['hp']}, Saldırı: {enemy['attack']}, Savunma: {enemy['defense']}")
+    if player.companion:
+        print(f"{player.companion['isim']} yanında, sana cesaret veriyor!")
 
     while player.is_alive() and enemy["hp"] > 0:
         print(player.status())

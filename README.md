@@ -37,5 +37,6 @@ CLI modunda oyun ilerlemesini kaydetmek için hikaye modu içindeyken "Oyunu kay
 - Hikaye modu
 - Envanter ve altın sistemi
 - Tamamon koleksiyonu
+- Yol arkadaşı: Başak
 - Ada keşfi ve savaş sistemi
 - Basit web arayüzü

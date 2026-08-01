@@ -21,12 +21,15 @@ const AVATARS = {
   emine: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#3d7a5c"/><rect x="29" y="4" width="6" height="16" fill="#ff6b6b"/><rect x="23" y="10" width="18" height="6" fill="#ff6b6b"/><circle cx="32" cy="36" r="16" fill="#ffdca0"/><circle cx="26" cy="34" r="2" fill="#3a2b1a"/><circle cx="38" cy="34" r="2" fill="#3a2b1a"/><path d="M25 42q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
   denge: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#b5722c"/><path d="M32 4l3.5 7.6L44 13l-6 6.2L39.4 28 32 23.8 24.6 28 26 19.2 20 13l8.5-1.4z" fill="#ffdca0"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="2" fill="#3a2b1a"/><circle cx="38" cy="36" r="2" fill="#3a2b1a"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
   nuri: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#5c4b8a"/><path d="M32 6a8 8 0 0 0-4 15v3h8v-3a8 8 0 0 0-4-15z" fill="#ffd54f"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="4" fill="none" stroke="#2a2a2a" stroke-width="2"/><circle cx="38" cy="36" r="4" fill="none" stroke="#2a2a2a" stroke-width="2"/><line x1="30" y1="36" x2="34" y2="36" stroke="#2a2a2a" stroke-width="2"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  basak: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#2c7a6b"/><path d="M18 10h12v14H18a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2z" fill="#fff8e8"/><path d="M46 10H34v14h12a2 2 0 0 0 2-2V12a2 2 0 0 0-2-2z" fill="#fff8e8"/><line x1="32" y1="10" x2="32" y2="24" stroke="#1c4a41" stroke-width="2"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="2" fill="#3a2b1a"/><circle cx="38" cy="36" r="2" fill="#3a2b1a"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  mehmet: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#7a8f3c"/><ellipse cx="32" cy="20" rx="18" ry="5" fill="#e0b463"/><path d="M22 20a10 8 0 0 1 20 0z" fill="#f0c987"/><circle cx="32" cy="40" r="16" fill="#ffdca0"/><circle cx="26" cy="38" r="2" fill="#3a2b1a"/><circle cx="38" cy="38" r="2" fill="#3a2b1a"/><path d="M25 46q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  can: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#8a5a2c"/><polygon points="20,20 24,10 32,16 40,10 44,20" fill="#ffd54f"/><circle cx="24" cy="10" r="2" fill="#ff6b6b"/><circle cx="32" cy="8" r="2" fill="#4db1ff"/><circle cx="40" cy="10" r="2" fill="#7ee787"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="2" fill="#3a2b1a"/><circle cx="38" cy="36" r="2" fill="#3a2b1a"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
 };
 
 const CHARACTERS = [
   {
     key: "bice",
-    displayName: "Biçe gibi Dağcı",
+    displayName: "Dağcı Biçe",
     description: "Zirvelere tırmanan güçlü bir kaşif. Saldırısı yüksek, cesaret dolu.",
     avatar: AVATARS.bice,
     hp: 20,
@@ -40,7 +43,7 @@ const CHARACTERS = [
   },
   {
     key: "emine",
-    displayName: "Emine gibi Doktor",
+    displayName: "Doktor Emine",
     description: "Becerikli bir şifacı. Sağlık ve savunma yetenekleri yüksek.",
     avatar: AVATARS.emine,
     hp: 26,
@@ -54,7 +57,7 @@ const CHARACTERS = [
   },
   {
     key: "denge",
-    displayName: "Denge gibi Kahraman",
+    displayName: "Kahraman Denge",
     description: "Meraklı küçük maceracı. Hızı ve çevikliğiyle fark yaratır.",
     avatar: AVATARS.denge,
     hp: 18,
@@ -68,7 +71,7 @@ const CHARACTERS = [
   },
   {
     key: "nuri",
-    displayName: "Zekası ile öne çıkan Nur",
+    displayName: "İlk Nur",
     description: "Aklıyla bulmacaları çözen bir stratejist. İngilizce öğrenme ve hazine keşiflerinde avantajlı.",
     avatar: AVATARS.nuri,
     hp: 22,
@@ -77,6 +80,48 @@ const CHARACTERS = [
     defense: 3,
     gold: 16,
     inventory: ["Yara Bandı", "Güç İksiri"],
+    tamamonlar: [],
+    hasTalisman: false,
+  },
+  {
+    key: "basak",
+    displayName: "Akıllı Başak",
+    description: "Zeki ve dikkatli bir kaşif. Bulmacaları ve stratejiyi çok iyi çözer.",
+    avatar: AVATARS.basak,
+    hp: 22,
+    maxHp: 22,
+    attack: 5,
+    defense: 4,
+    gold: 15,
+    inventory: ["Yara Bandı", "Güç İksiri"],
+    tamamonlar: [],
+    hasTalisman: false,
+  },
+  {
+    key: "mehmet",
+    displayName: "Çiftçi Çocuk Mehmet",
+    description: "Toprakla uğraşan güçlü ve dayanıklı bir çiftçi. Zorluklara karşı sabırlı.",
+    avatar: AVATARS.mehmet,
+    hp: 24,
+    maxHp: 24,
+    attack: 6,
+    defense: 3,
+    gold: 11,
+    inventory: ["Yara Bandı", "Duman Bombası"],
+    tamamonlar: [],
+    hasTalisman: false,
+  },
+  {
+    key: "can",
+    displayName: "Günday Can",
+    description: "Ejderha Adası'nın mimarı. Dengeli güç ve cesaretle maceraya atılır.",
+    avatar: AVATARS.can,
+    hp: 23,
+    maxHp: 23,
+    attack: 6,
+    defense: 3,
+    gold: 13,
+    inventory: ["Yara Bandı", "Duman Bombası"],
     tamamonlar: [],
     hasTalisman: false,
   },
@@ -1236,12 +1281,9 @@ function renderAbout(app) {
     <div class="panel">
       ${renderSceneBanner("Oyun Hakkında", "Ejderha Adası macerasının tüm yönlerini keşfet.", ICONS.scroll)}
       <h2 class="section-title">Oyun Açıklaması</h2>
-      <p>"Işıl Dengenin oyunu Ejderha Adası" seni büyülü bir adada geçen hikâyeye davet ediyor. Bu oyunda dört farklı karakterden birini seçerek macerana başlarsın:</p>
+      <p>"Işıl Dengenin oyunu Ejderha Adası" seni büyülü bir adada geçen hikâyeye davet ediyor. Bu oyunda ${CHARACTERS.length} farklı karakterden birini seçerek macerana başlarsın:</p>
       <ul>
-        <li><strong>Biçe gibi Dağcı</strong>: Güçlü ve cesur bir kaşif, daha yüksek saldırı gücüne sahip.</li>
-        <li><strong>Emine gibi Doktor</strong>: Şifacı yetenekleriyle daha fazla can ve dayanıklılık sağlar.</li>
-        <li><strong>Denge gibi Kahraman</strong>: Çevik ve meraklı, farklı keşiflere uygun.</li>
-        <li><strong>Zekası ile öne çıkan Nur</strong>: Strateji ve bulmaca çözme konusunda avantajlı.</li>
+        ${CHARACTERS.map(c => `<li><strong>${c.displayName}</strong>: ${c.description}</li>`).join("")}
       </ul>
       <h2 class="section-title">Nasıl Oynanır?</h2>
       <ul>

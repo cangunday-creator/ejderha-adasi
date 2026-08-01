@@ -107,10 +107,11 @@ const TAMAMONLAR = [
 ];
 
 const ENEMIES = [
-  { name: "Yılanlı Yaratık", hp: 12, attack: 4, defense: 1, description: "Sisli adanın derinliklerinden çıkan tehlike." },
-  { name: "Harabe Bekçisi", hp: 14, attack: 5, defense: 2, description: "Harabeleri koruyan yırtıcı bir bekçi." },
-  { name: "Liman Hırsızı", hp: 10, attack: 3, defense: 1, description: "Sinsi bir saldırgan, dikkatli ol." },
-  { name: "Lavcan", hp: 16, attack: 6, defense: 2, description: "Volkanik gücüyle sizi sınayan canavar." },
+  { name: "Yılanlı Yaratık", hp: 12, attack: 4, defense: 1, description: "Sisli adanın derinliklerinden çıkan tehlike.", icon: "battle" },
+  { name: "Harabe Bekçisi", hp: 14, attack: 5, defense: 2, description: "Harabeleri koruyan yırtıcı bir bekçi.", icon: "battle" },
+  { name: "Liman Hırsızı", hp: 10, attack: 3, defense: 1, description: "Sinsi bir saldırgan, dikkatli ol.", icon: "battle" },
+  { name: "Lavcan", hp: 16, attack: 6, defense: 2, description: "Volkanik gücüyle sizi sınayan canavar.", icon: "battle" },
+  { name: "Deniz Canavarı", hp: 15, attack: 5, defense: 1, description: "Dalgaların arasından çıkıp kıyıya saldıran kocaman bir yaratık.", icon: "seaMonster" },
 ];
 
 const ITEMS = {
@@ -140,6 +141,24 @@ const SHOP = [
 
 const SAVE_KEY = "ejderhaAdasiSave";
 
+const ICONS = {
+  dragon: '<svg viewBox="0 0 24 24"><path d="M2 20c4-2 6-8 10-8 3 0 3 3 6 3 2 0 3-2 4-5-1 6-5 12-11 12-4 0-7-1-9-2z" fill="#ffdca0"/></svg>',
+  village: '<svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z" fill="#ffdca0"/></svg>',
+  island: '<svg viewBox="0 0 24 24"><path d="M3 18l5-8 3 4 4-7 6 11z" fill="#ffdca0"/></svg>',
+  battle: '<svg viewBox="0 0 24 24"><path d="M4 20L20 4M4 4l16 16" stroke="#ffdca0" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  shop: '<svg viewBox="0 0 24 24"><path d="M7 8h10l1 12H6z" fill="#ffdca0"/><path d="M9 8a3 3 0 0 1 6 0" stroke="#ffdca0" stroke-width="2" fill="none"/></svg>',
+  tamamon: '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.27 5.8 21 7 14.14l-5-4.87 7.1-1.01z" fill="#ffdca0"/></svg>',
+  english: '<svg viewBox="0 0 24 24"><path d="M4 4h7v16H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 4h7a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-7V4z" fill="#ffdca0"/></svg>',
+  basak: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.36C.7 9.7 2 6 5.5 6c2 0 3.3 1.2 4 2.3.7-1.1 2-2.3 4-2.3 3.5 0 4.8 3.7 3 6.64C19 16.65 12 21 12 21z" fill="#ffdca0"/></svg>',
+  hero: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffdca0"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 17h14v3H5zM6 7h12v10H6z" fill="#ffdca0"/></svg>',
+  wave: '<svg viewBox="0 0 24 24"><path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0v4c-2 2-4 2-6 0s-4-2-6 0-4 2-6 0z" fill="#7fd8ff"/></svg>',
+  seaMonster: '<svg viewBox="0 0 24 24"><path d="M4 16c0-5 4-9 8-9s8 4 8 9c-2-1-3-2-4-1-1 1-2 2-4 2s-3-1-4-2c-1-1-2 0-4 1z" fill="#4caf7d"/><circle cx="9" cy="10" r="1.2" fill="#0b1c14"/><circle cx="15" cy="10" r="1.2" fill="#0b1c14"/></svg>',
+  cave: '<svg viewBox="0 0 24 24"><path d="M2 20a10 8 0 0 1 20 0z" fill="#8d6748"/><ellipse cx="12" cy="20" rx="4" ry="5" fill="#1a120b"/></svg>',
+  ruins: '<svg viewBox="0 0 24 24"><rect x="4" y="8" width="3" height="12" fill="#c9c2b3"/><rect x="10" y="4" width="3" height="16" fill="#c9c2b3"/><rect x="17" y="10" width="3" height="10" fill="#c9c2b3"/></svg>',
+  volcano: '<svg viewBox="0 0 24 24"><polygon points="12,3 20,20 4,20" fill="#5a3a2a"/><circle cx="12" cy="8" r="2.5" fill="#ff5722"/></svg>',
+};
+
 const STATE = {
   scene: "menu",
   player: JSON.parse(JSON.stringify(INITIAL_PLAYER)),
@@ -149,7 +168,44 @@ const STATE = {
   islandLocation: null,
   englishMode: "menu",
   englishQuestion: null,
+  worldPosition: { x: 50, y: 80 },
 };
+
+const VILLAGE_DOORS = [
+  { x: 18, y: 55, label: "Pazar Yeri", icon: ICONS.shop, action: "shop" },
+  { x: 38, y: 30, label: "Tamamon", icon: ICONS.tamamon, action: "tamamon" },
+  { x: 62, y: 32, label: "İngilizce", icon: ICONS.english, action: "english" },
+  { x: 82, y: 55, label: "Başak", icon: ICONS.basak, action: "basak" },
+  { x: 50, y: 88, label: "Ejderha Adası", icon: ICONS.island, action: "island" },
+];
+
+const ISLAND_DOORS = [
+  { x: 22, y: 26, label: "Mağara", icon: ICONS.cave, location: "Mağara" },
+  { x: 55, y: 18, label: "Volkan", icon: ICONS.volcano, location: "Volkan" },
+  { x: 82, y: 30, label: "Harabe", icon: ICONS.ruins, location: "Harabe" },
+  { x: 50, y: 80, label: "Kıyı", icon: ICONS.wave, location: "Kıyı" },
+];
+
+function walkTo(x, y, onArrive) {
+  STATE.worldPosition = { x, y };
+  const player = document.getElementById("world-player");
+  if (player) {
+    player.style.left = `${x}%`;
+    player.style.top = `${y}%`;
+  }
+  if (onArrive) {
+    setTimeout(onArrive, 420);
+  }
+}
+
+function onWorldMapClick(event, mapId) {
+  const mapEl = document.getElementById(mapId);
+  if (!mapEl) return;
+  const rect = mapEl.getBoundingClientRect();
+  const x = Math.min(96, Math.max(4, ((event.clientX - rect.left) / rect.width) * 100));
+  const y = Math.min(94, Math.max(10, ((event.clientY - rect.top) / rect.height) * 100));
+  walkTo(x, y);
+}
 
 const ENGLISH_SENTENCES = [
   {
@@ -186,19 +242,6 @@ const scenes = {
   about: renderAbout,
   basak: renderBasak,
   end: renderEnd,
-};
-
-const ICONS = {
-  dragon: '<svg viewBox="0 0 24 24"><path d="M2 20c4-2 6-8 10-8 3 0 3 3 6 3 2 0 3-2 4-5-1 6-5 12-11 12-4 0-7-1-9-2z" fill="#ffdca0"/></svg>',
-  village: '<svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z" fill="#ffdca0"/></svg>',
-  island: '<svg viewBox="0 0 24 24"><path d="M3 18l5-8 3 4 4-7 6 11z" fill="#ffdca0"/></svg>',
-  battle: '<svg viewBox="0 0 24 24"><path d="M4 20L20 4M4 4l16 16" stroke="#ffdca0" stroke-width="2.5" stroke-linecap="round"/></svg>',
-  shop: '<svg viewBox="0 0 24 24"><path d="M7 8h10l1 12H6z" fill="#ffdca0"/><path d="M9 8a3 3 0 0 1 6 0" stroke="#ffdca0" stroke-width="2" fill="none"/></svg>',
-  tamamon: '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.27 5.8 21 7 14.14l-5-4.87 7.1-1.01z" fill="#ffdca0"/></svg>',
-  english: '<svg viewBox="0 0 24 24"><path d="M4 4h7v16H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 4h7a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-7V4z" fill="#ffdca0"/></svg>',
-  basak: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.36C.7 9.7 2 6 5.5 6c2 0 3.3 1.2 4 2.3.7-1.1 2-2.3 4-2.3 3.5 0 4.8 3.7 3 6.64C19 16.65 12 21 12 21z" fill="#ffdca0"/></svg>',
-  hero: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffdca0"/></svg>',
-  scroll: '<svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 17h14v3H5zM6 7h12v10H6z" fill="#ffdca0"/></svg>',
 };
 
 function renderApp() {
@@ -275,18 +318,24 @@ function renderStatus() {
 }
 
 function renderVillage(app) {
+  const character = CHARACTERS.find(c => c.key === STATE.characterKey);
+  const avatar = character ? character.avatar : ICONS.hero;
+  const pos = STATE.worldPosition;
+
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Sahil Kasabası", "Denizin tuz kokusu, köyün sıcak ateşiyle karışıyor.", ICONS.village)}
-      <h2 class="section-title">Kasaba</h2>
-      <p>Kasabada dinlen, pazarda alışveriş yap veya İngilizce ve Tamamon yeteneklerini geliştir. Seçtiğin karakterin yeteneklerini kullanarak keşifler, savaşlar ve mini oyunlarla maceran ilerleyecek.</p>
+      ${renderSceneBanner("Sahil Kasabası", "Bir yere gitmek için haritada üzerine dokun ya da yürüyerek yaklaş.", ICONS.village)}
+      <div class="world-map" id="village-map" onclick="onWorldMapClick(event, 'village-map')">
+        ${VILLAGE_DOORS.map(door => `
+          <div class="world-door" style="left: ${door.x}%; top: ${door.y}%;" onclick="event.stopPropagation(); walkTo(${door.x}, ${door.y}, () => gotoScene('${door.action}'))">
+            <div class="world-door-icon">${door.icon}</div>
+            <span class="world-door-label">${door.label}</span>
+          </div>
+        `).join("")}
+        <div class="world-player" id="world-player" style="left: ${pos.x}%; top: ${pos.y}%;">${avatar}</div>
+      </div>
       <div class="button-grid">
-        <button class="primary" onclick="gotoScene('shop')">Pazar Yeri</button>
-        <button class="secondary" onclick="gotoScene('tamamon')">Tamamon Koleksiyonu</button>
-        <button class="secondary" onclick="gotoScene('english')">İngilizce Kartları</button>
-        <button class="secondary" onclick="gotoScene('basak')">Başak ile Tanış</button>
-        <button class="secondary" onclick="gotoScene('island')">Ejderha Adası'na Git</button>
         <button class="secondary" onclick="healAtVillage()">Dinlen (+10 HP)</button>
         <button class="secondary" onclick="saveGame()">Oyunu Kaydet</button>
         <button class="secondary" onclick="gotoScene('menu')">Ana Menü</button>
@@ -299,18 +348,31 @@ function renderVillage(app) {
 }
 
 function renderIsland(app) {
-  const location = STATE.islandLocation || "Adanın merkezine doğru ilerliyorsun.";
+  const location = STATE.islandLocation || "Adaya ayak bastın. Bir bölgeye doğru yürü.";
+  const character = CHARACTERS.find(c => c.key === STATE.characterKey);
+  const avatar = character ? character.avatar : ICONS.hero;
+  const pos = STATE.worldPosition;
+
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
       ${renderSceneBanner("Ejderha Adası", "Sisler ve fırtına bulutları arasında gerçek bir macera seni bekliyor.", ICONS.island)}
-      <h2 class="section-title">Keşif</h2>
       <p>${location}</p>
+      <div class="world-map island-map" id="island-map" onclick="onWorldMapClick(event, 'island-map')">
+        <div class="world-sea">
+          <div class="world-wave" style="left: 12%;">${ICONS.wave}</div>
+          <div class="world-wave" style="left: 68%;">${ICONS.wave}</div>
+          <div class="world-sea-monster">${ICONS.seaMonster}</div>
+        </div>
+        ${ISLAND_DOORS.map(door => `
+          <div class="world-door" style="left: ${door.x}%; top: ${door.y}%;" onclick="event.stopPropagation(); walkTo(${door.x}, ${door.y}, () => searchIsland('${door.location}'))">
+            <div class="world-door-icon">${door.icon}</div>
+            <span class="world-door-label">${door.label}</span>
+          </div>
+        `).join("")}
+        <div class="world-player" id="world-player" style="left: ${pos.x}%; top: ${pos.y}%;">${avatar}</div>
+      </div>
       <div class="button-grid">
-        <button class="primary" onclick="searchIsland('Mağara')">Mağara</button>
-        <button class="secondary" onclick="searchIsland('Harabe')">Harabe</button>
-        <button class="secondary" onclick="searchIsland('Kıyı')">Kıyı</button>
-        <button class="secondary" onclick="searchIsland('Volkan')">Volkan</button>
         <button class="secondary" onclick="gotoScene('village')">Köye Dön</button>
       </div>
     </div>
@@ -323,11 +385,13 @@ function renderIsland(app) {
 function renderBattle(app) {
   const enemy = STATE.currentEnemy;
   const player = STATE.player;
+  const battleIcon = ICONS[enemy.icon] || ICONS.battle;
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.", ICONS.battle)}
+      ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.", battleIcon)}
       <div class="card">
+        <div class="avatar-circle avatar-circle-large">${battleIcon}</div>
         <h3>${enemy.name}</h3>
         <p>${enemy.description}</p>
         <p>HP: ${enemy.hp}</p>
@@ -682,6 +746,12 @@ function renderEnd(app) {
 }
 
 function gotoScene(scene) {
+  if (scene === "village" && STATE.scene !== "village") {
+    STATE.worldPosition = { x: 50, y: 80 };
+  }
+  if (scene === "island" && STATE.scene !== "island") {
+    STATE.worldPosition = { x: 50, y: 92 };
+  }
   STATE.scene = scene;
   STATE.message = "";
   if (scene === "english") {
@@ -758,6 +828,7 @@ function selectCharacter(key) {
   STATE.player = createPlayerFromCharacter(character);
   STATE.characterKey = key;
   STATE.scene = "village";
+  STATE.worldPosition = { x: 50, y: 80 };
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;
   STATE.currentEnemy = null;
@@ -802,6 +873,7 @@ function continueGame() {
   STATE.player = saved.player;
   STATE.characterKey = saved.characterKey;
   STATE.scene = "village";
+  STATE.worldPosition = { x: 50, y: 80 };
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;
   STATE.currentEnemy = null;
@@ -841,10 +913,14 @@ function searchIsland(location) {
     let enemy = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
     if (location === "Volkan") {
       enemy = ENEMIES.find(e => e.name === "Lavcan") || enemy;
+    } else if (location === "Kıyı") {
+      enemy = ENEMIES.find(e => e.name === "Deniz Canavarı") || enemy;
     }
     STATE.currentEnemy = JSON.parse(JSON.stringify(enemy));
     STATE.scene = "battle";
-    STATE.message = ` ${message} Düşman ortaya çıktı!`;
+    STATE.message = location === "Kıyı"
+      ? " Dalgalar arasından bir Deniz Canavarı fırladı!"
+      : ` ${message} Düşman ortaya çıktı!`;
     renderApp();
     return;
   } else {

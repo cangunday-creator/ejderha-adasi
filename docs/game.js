@@ -16,11 +16,19 @@ const INITIAL_PLAYER = {
   companion: null,
 };
 
+const AVATARS = {
+  bice: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#2c5f7c"/><polygon points="32,8 42,20 22,20" fill="#e8eef2"/><polygon points="32,12 38,20 26,20" fill="#4db1ff"/><circle cx="32" cy="34" r="16" fill="#ffdca0"/><circle cx="26" cy="32" r="2" fill="#3a2b1a"/><circle cx="38" cy="32" r="2" fill="#3a2b1a"/><path d="M25 40q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  emine: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#3d7a5c"/><rect x="29" y="4" width="6" height="16" fill="#ff6b6b"/><rect x="23" y="10" width="18" height="6" fill="#ff6b6b"/><circle cx="32" cy="36" r="16" fill="#ffdca0"/><circle cx="26" cy="34" r="2" fill="#3a2b1a"/><circle cx="38" cy="34" r="2" fill="#3a2b1a"/><path d="M25 42q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  denge: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#b5722c"/><path d="M32 4l3.5 7.6L44 13l-6 6.2L39.4 28 32 23.8 24.6 28 26 19.2 20 13l8.5-1.4z" fill="#ffdca0"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="2" fill="#3a2b1a"/><circle cx="38" cy="36" r="2" fill="#3a2b1a"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+  nuri: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#5c4b8a"/><path d="M32 6a8 8 0 0 0-4 15v3h8v-3a8 8 0 0 0-4-15z" fill="#ffd54f"/><circle cx="32" cy="38" r="16" fill="#ffdca0"/><circle cx="26" cy="36" r="4" fill="none" stroke="#2a2a2a" stroke-width="2"/><circle cx="38" cy="36" r="4" fill="none" stroke="#2a2a2a" stroke-width="2"/><line x1="30" y1="36" x2="34" y2="36" stroke="#2a2a2a" stroke-width="2"/><path d="M25 44q7 6 14 0" stroke="#3a2b1a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+};
+
 const CHARACTERS = [
   {
     key: "bice",
     displayName: "Biçe gibi Dağcı",
     description: "Zirvelere tırmanan güçlü bir kaşif. Saldırısı yüksek, cesaret dolu.",
+    avatar: AVATARS.bice,
     hp: 20,
     maxHp: 20,
     attack: 7,
@@ -34,6 +42,7 @@ const CHARACTERS = [
     key: "emine",
     displayName: "Emine gibi Doktor",
     description: "Becerikli bir şifacı. Sağlık ve savunma yetenekleri yüksek.",
+    avatar: AVATARS.emine,
     hp: 26,
     maxHp: 26,
     attack: 4,
@@ -47,6 +56,7 @@ const CHARACTERS = [
     key: "denge",
     displayName: "Denge gibi Kahraman",
     description: "Meraklı küçük maceracı. Hızı ve çevikliğiyle fark yaratır.",
+    avatar: AVATARS.denge,
     hp: 18,
     maxHp: 18,
     attack: 6,
@@ -60,6 +70,7 @@ const CHARACTERS = [
     key: "nuri",
     displayName: "Zekası ile öne çıkan Nur",
     description: "Aklıyla bulmacaları çözen bir stratejist. İngilizce öğrenme ve hazine keşiflerinde avantajlı.",
+    avatar: AVATARS.nuri,
     hp: 22,
     maxHp: 22,
     attack: 5,
@@ -127,9 +138,12 @@ const SHOP = [
   { name: "Güç İksiri", price: 15 },
 ];
 
+const SAVE_KEY = "ejderhaAdasiSave";
+
 const STATE = {
   scene: "menu",
   player: JSON.parse(JSON.stringify(INITIAL_PLAYER)),
+  characterKey: null,
   currentEnemy: null,
   message: "",
   islandLocation: null,
@@ -197,12 +211,19 @@ function renderApp() {
 }
 
 function renderMenu(app) {
+  const saved = loadSavedGame();
+  const savedCharacter = saved ? CHARACTERS.find(c => c.key === saved.characterKey) : null;
+  const continueLabel = saved
+    ? `Kaldığın Yerden Devam Et (${savedCharacter ? savedCharacter.displayName : saved.player.name}, ${saved.player.gold} altın)`
+    : "";
+
   app.innerHTML = `
     <div class="panel">
       ${renderSceneBanner("Ejderha Adası'na hoş geldin", "Işıl Dengenin yolunu seç ve maceranın ritmini hisset.", ICONS.dragon)}
       <h2 class="section-title">Ana Menü</h2>
       <div class="button-grid">
-        <button class="primary" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
+        ${saved ? `<button class="primary" onclick="continueGame()">${continueLabel}</button>` : ""}
+        <button class="${saved ? "secondary" : "primary"}" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
         <button class="secondary" onclick="gotoScene('about')">Oyun Hakkında</button>
         <button class="secondary" onclick="gotoScene('tamamon')">Tamamon Koleksiyonu</button>
         <button class="secondary" onclick="resetGame()">Sıfırla</button>
@@ -225,23 +246,27 @@ function renderSceneBanner(title, subtitle, icon) {
 
 function renderStatus() {
   const player = STATE.player;
+  const character = CHARACTERS.find(c => c.key === STATE.characterKey);
   const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
   const defense = player.defense + (player.companion ? 1 : 0);
   const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
   return `
     <div class="panel">
       <div class="status-row">
-        <div>
-          <h2 class="section-title">${player.name}</h2>
-          <ul class="stats-list">
-            <li>HP: ${player.hp}/${player.maxHp}</li>
-            <li>Saldırı: ${attack}</li>
-            <li>Savunma: ${defense}</li>
-            <li>Altın: ${player.gold}</li>
-            <li>Tamamonlar: ${player.tamamonlar.length}</li>
-            <li>Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
-            ${player.companion ? `<li>Yoldaş: ${player.companion.name}</li>` : ""}
-          </ul>
+        <div class="status-identity">
+          ${character ? `<div class="avatar-circle avatar-circle-small">${character.avatar}</div>` : ""}
+          <div>
+            <h2 class="section-title">${player.name}</h2>
+            <ul class="stats-list">
+              <li>HP: ${player.hp}/${player.maxHp}</li>
+              <li>Saldırı: ${attack}</li>
+              <li>Savunma: ${defense}</li>
+              <li>Altın: ${player.gold}</li>
+              <li>Tamamonlar: ${player.tamamonlar.length}</li>
+              <li>Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
+              ${player.companion ? `<li>Yoldaş: ${player.companion.name}</li>` : ""}
+            </ul>
+          </div>
         </div>
         <div class="status-bar"><div class="status-fill" style="width: ${hpPercent}%;"></div></div>
       </div>
@@ -263,6 +288,7 @@ function renderVillage(app) {
         <button class="secondary" onclick="gotoScene('basak')">Başak ile Tanış</button>
         <button class="secondary" onclick="gotoScene('island')">Ejderha Adası'na Git</button>
         <button class="secondary" onclick="healAtVillage()">Dinlen (+10 HP)</button>
+        <button class="secondary" onclick="saveGame()">Oyunu Kaydet</button>
         <button class="secondary" onclick="gotoScene('menu')">Ana Menü</button>
       </div>
     </div>
@@ -667,7 +693,8 @@ function gotoScene(scene) {
 
 function renderCharacterSelection(app) {
   const cards = CHARACTERS.map(character => `
-    <div class="card">
+    <div class="card avatar-card">
+      <div class="avatar-circle avatar-circle-large">${character.avatar}</div>
       <h3>${character.displayName}</h3>
       <p>${character.description}</p>
       <p><strong>HP:</strong> ${character.hp} / <strong>Saldırı:</strong> ${character.attack} / <strong>Savunma:</strong> ${character.defense}</p>
@@ -729,6 +756,7 @@ function selectCharacter(key) {
   const character = CHARACTERS.find(c => c.key === key);
   if (!character) return;
   STATE.player = createPlayerFromCharacter(character);
+  STATE.characterKey = key;
   STATE.scene = "village";
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;
@@ -739,11 +767,45 @@ function selectCharacter(key) {
 
 function resetGame() {
   STATE.player = JSON.parse(JSON.stringify(INITIAL_PLAYER));
+  STATE.characterKey = null;
   STATE.scene = "menu";
   STATE.message = "";
   STATE.currentEnemy = null;
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;
+  renderApp();
+}
+
+function saveGame() {
+  const data = {
+    characterKey: STATE.characterKey,
+    player: STATE.player,
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  STATE.message = "Oyun kaydedildi! Kaldığın yerden devam edebilirsin.";
+  renderApp();
+}
+
+function loadSavedGame() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function continueGame() {
+  const saved = loadSavedGame();
+  if (!saved) return;
+  STATE.player = saved.player;
+  STATE.characterKey = saved.characterKey;
+  STATE.scene = "village";
+  STATE.englishMode = "menu";
+  STATE.englishQuestion = null;
+  STATE.currentEnemy = null;
+  STATE.message = "Kaldığın yerden devam ediyorsun!";
   renderApp();
 }
 

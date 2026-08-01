@@ -239,6 +239,42 @@ button.secondary:hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.status-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-circle {
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, rgba(248, 184, 76, 0.25), rgba(21, 44, 71, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-circle svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.avatar-circle-small {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+}
+
+.avatar-circle-large {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 12px;
+}
+
+.avatar-card {
+  text-align: center;
+}
+
 .status-bar {
   height: 14px;
   width: 100%;

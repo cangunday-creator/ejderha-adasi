@@ -1,7 +1,22 @@
-const BASAK = {
-  name: "Başak",
-  description: "Sevimli ve cesur bir yol arkadaşı. Yanındayken saldırın ve savunman güçlenir.",
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAd6B1X4T-d8LtJAG98GaW8DC2oy1GckHA",
+  authDomain: "ejderha-adasi.firebaseapp.com",
+  databaseURL: "https://ejderha-adasi-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ejderha-adasi",
+  storageBucket: "ejderha-adasi.firebasestorage.app",
+  messagingSenderId: "363772180754",
+  appId: "1:363772180754:web:b3c41183c62746dae65bcb",
 };
+
+let firebaseDb = null;
+try {
+  if (window.firebase) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseDb = firebase.database();
+  }
+} catch (e) {
+  firebaseDb = null;
+}
 
 const INITIAL_PLAYER = {
   name: "Maceracı",
@@ -13,7 +28,7 @@ const INITIAL_PLAYER = {
   inventory: ["Yara Bandı", "Duman Bombası"],
   tamamonlar: [],
   hasTalisman: false,
-  companion: null,
+  battlesWon: 0,
 };
 
 const AVATARS = {
@@ -138,7 +153,7 @@ function createPlayerFromCharacter(character) {
     inventory: [...character.inventory],
     tamamonlar: JSON.parse(JSON.stringify(character.tamamonlar)),
     hasTalisman: character.hasTalisman,
-    companion: null,
+    battlesWon: 0,
   };
 }
 
@@ -358,7 +373,6 @@ const ICONS = {
   shop: '<svg viewBox="0 0 24 24"><path d="M7 8h10l1 12H6z" fill="#ffdca0"/><path d="M9 8a3 3 0 0 1 6 0" stroke="#ffdca0" stroke-width="2" fill="none"/></svg>',
   tamamon: '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.27 5.8 21 7 14.14l-5-4.87 7.1-1.01z" fill="#ffdca0"/></svg>',
   english: '<svg viewBox="0 0 24 24"><path d="M4 4h7v16H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 4h7a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-7V4z" fill="#ffdca0"/></svg>',
-  basak: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.36C.7 9.7 2 6 5.5 6c2 0 3.3 1.2 4 2.3.7-1.1 2-2.3 4-2.3 3.5 0 4.8 3.7 3 6.64C19 16.65 12 21 12 21z" fill="#ffdca0"/></svg>',
   hero: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffdca0"/></svg>',
   scroll: '<svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 17h14v3H5zM6 7h12v10H6z" fill="#ffdca0"/></svg>',
   wave: '<svg viewBox="0 0 24 24"><path d="M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0v4c-2 2-4 2-6 0s-4-2-6 0-4 2-6 0z" fill="#7fd8ff"/></svg>',
@@ -388,7 +402,6 @@ const VILLAGE_DOORS = [
   { x: 18, y: 55, label: "Pazar Yeri", icon: ICONS.shop, action: "shop" },
   { x: 38, y: 30, label: "Tamamon", icon: ICONS.tamamon, action: "tamamon" },
   { x: 62, y: 32, label: "İngilizce", icon: ICONS.english, action: "english" },
-  { x: 82, y: 55, label: "Başak", icon: ICONS.basak, action: "basak" },
   { x: 50, y: 88, label: "Ejderha Adası", icon: ICONS.island, action: "island" },
 ];
 
@@ -509,7 +522,6 @@ const scenes = {
   shop: renderShop,
   english: renderEnglishPractice,
   about: renderAbout,
-  basak: renderBasak,
   end: renderEnd,
 };
 
@@ -535,7 +547,12 @@ function renderMenu(app) {
         <button class="secondary" onclick="resetGame()">Sıfırla</button>
       </div>
     </div>
+    <div class="panel">
+      ${renderSceneBanner("Liderlik Tablosu", "Arkadaşların nasıl gidiyor, hep birlikte görelim.", ICONS.hero)}
+      <div id="leaderboard-container"><p>Yükleniyor...</p></div>
+    </div>
   `;
+  loadLeaderboard();
 }
 
 function renderSceneBanner(title, subtitle, icon) {
@@ -553,8 +570,8 @@ function renderSceneBanner(title, subtitle, icon) {
 function renderStatus() {
   const player = STATE.player;
   const character = CHARACTERS.find(c => c.key === STATE.characterKey);
-  const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
-  const defense = player.defense + (player.companion ? 1 : 0);
+  const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length;
+  const defense = player.defense;
   const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
   return `
     <div class="panel">
@@ -570,7 +587,6 @@ function renderStatus() {
               <li>🪙 Altın: ${player.gold}</li>
               <li>🐾 Tamamonlar: ${player.tamamonlar.length}</li>
               <li>✨ Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
-              ${player.companion ? `<li>🤝 Yoldaş: ${player.companion.name}</li>` : ""}
             </ul>
           </div>
         </div>
@@ -1112,37 +1128,6 @@ function shuffleArray(array) {
   return copy;
 }
 
-function renderBasak(app) {
-  const player = STATE.player;
-  const already = Boolean(player.companion);
-  app.innerHTML = `
-    ${renderStatus()}
-    <div class="panel">
-      ${renderSceneBanner("Sevimli Kız Başak", "Kasabanın kenarında duran neşeli bir kız seni fark ediyor.", ICONS.basak)}
-      <div class="card">
-        <h3>Başak</h3>
-        <p>${BASAK.description}</p>
-        <p>"Merhaba! Ben Başak. Ejderha Adası'na gidiyorsan sana katılabilirim, birlikte daha güçlü oluruz!"</p>
-      </div>
-      <div class="button-grid">
-        ${already
-          ? '<p>Başak zaten yol arkadaşın!</p>'
-          : '<button class="primary" onclick="recruitBasak()">Evet, yol arkadaşım olsun</button><button class="secondary" onclick="gotoScene(\'village\')">Belki daha sonra</button>'}
-        <button class="secondary" onclick="gotoScene('village')">Kasabaya Dön</button>
-      </div>
-    </div>
-    <div class="panel">
-      <p>${STATE.message}</p>
-    </div>
-  `;
-}
-
-function recruitBasak() {
-  STATE.player.companion = { ...BASAK };
-  STATE.message = "Başak artık senin yol arkadaşın! Maceranda saldırın ve savunman güçlendi.";
-  gotoScene("village");
-}
-
 function renderShop(app) {
   const affordable = STATE.player.gold;
   const list = SHOP.map(item => {
@@ -1236,7 +1221,7 @@ function renderTutorial(app) {
       <div class="cards">
         <div class="card">
           <h3>🗺️ Haritada Yürüme</h3>
-          <p>Köyde ve adada haritanın üzerine dokun ya da tıkla — karakterin oraya yürür. Yuvarlak ikonlar birer <strong>kapı</strong>: üzerine dokununca o aktivite açılır (Pazar, Tamamon, İngilizce, Başak, Ada geçişi, Mağara/Harabe/Volkan/Kıyı).</p>
+          <p>Köyde ve adada haritanın üzerine dokun ya da tıkla — karakterin oraya yürür. Yuvarlak ikonlar birer <strong>kapı</strong>: üzerine dokununca o aktivite açılır (Pazar, Tamamon, İngilizce, Ada geçişi, Mağara/Harabe/Volkan/Kıyı).</p>
         </div>
         <div class="card">
           <h3>🎯 Amacın Ne?</h3>
@@ -1289,7 +1274,7 @@ function renderAbout(app) {
       <ul>
         <li><strong>Karakter seçimi</strong> ile oyuna başla. Her karakter farklı başlangıç istatistiklerine sahiptir.</li>
         <li><strong>Haritada yürü</strong>: Kasabada ve adada haritanın üzerine dokun/tıkla — karakterin oraya yürür. Yuvarlak ikonlar birer <strong>kapı</strong>dır; üzerine gidince o aktivite açılır.</li>
-        <li><strong>Kasabadaki kapılar</strong>: Pazar Yeri, Tamamon Koleksiyonu, İngilizce Kartları, Başak (yol arkadaşın) ve Ejderha Adası'na geçiş.</li>
+        <li><strong>Kasabadaki kapılar</strong>: Pazar Yeri, Tamamon Koleksiyonu, İngilizce Kartları ve Ejderha Adası'na geçiş.</li>
         <li><strong>Adayı keşfet</strong>: Mağara, Harabe, Volkan ve Kıyı bölgelerine yürüyerek keşif yap. Hazine bulabilir, Tamamon yakalayabilir ya da düşmanla karşılaşabilirsin — kıyıya yaklaşırsan dalgalardan bir Deniz Canavarı çıkabilir!</li>
         <li><strong>Görev ipucu</strong>: Kasaba ve ada ekranlarının üstünde sarı bir kutuda o an ne yapman gerektiğini söyleyen bir ipucu belirir.</li>
         <li><strong>Savaş</strong> sırasında normal saldırı, güçlü darbe, eşya kullanma veya kaçma seçeneklerini kullanabilirsin.</li>
@@ -1365,6 +1350,69 @@ function saveGame() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
   STATE.message = "Oyun kaydedildi! Bu karakterle kaldığın yerden devam edebilirsin.";
   renderApp();
+  syncToLeaderboard();
+}
+
+function syncToLeaderboard() {
+  if (!firebaseDb || !STATE.characterKey) return;
+  const character = CHARACTERS.find(c => c.key === STATE.characterKey);
+  const player = STATE.player;
+  firebaseDb.ref(`players/${STATE.characterKey}`).set({
+    displayName: character ? character.displayName : player.name,
+    gold: player.gold,
+    tamamonCount: player.tamamonlar.length,
+    hasTalisman: Boolean(player.hasTalisman),
+    battlesWon: player.battlesWon || 0,
+    updatedAt: Date.now(),
+  }).catch(() => {});
+}
+
+function loadLeaderboard() {
+  const container = document.getElementById("leaderboard-container");
+  if (!container) return;
+  if (!firebaseDb) {
+    container.innerHTML = "<p>Skor tablosu şu an kullanılamıyor.</p>";
+    return;
+  }
+  firebaseDb.ref("players").once("value")
+    .then(snapshot => renderLeaderboardTable(snapshot.val() || {}))
+    .catch(() => {
+      const el = document.getElementById("leaderboard-container");
+      if (el) el.innerHTML = "<p>Skor tablosu yüklenemedi.</p>";
+    });
+}
+
+function renderLeaderboardTable(data) {
+  const container = document.getElementById("leaderboard-container");
+  if (!container) return;
+  const rows = Object.keys(data).map(key => ({ key, ...data[key] }));
+  if (rows.length === 0) {
+    container.innerHTML = "<p>Henüz kimse kaydetmedi. İlk kaydeden sen ol!</p>";
+    return;
+  }
+  rows.sort((a, b) => (b.gold || 0) - (a.gold || 0));
+  container.innerHTML = `
+    <div class="leaderboard-table">
+      <div class="leaderboard-row leaderboard-header">
+        <span>#</span>
+        <span>Karakter</span>
+        <span>🪙 Altın</span>
+        <span>🐾 Tamamon</span>
+        <span>✨ Tılsım</span>
+        <span>🏆 Zafer</span>
+      </div>
+      ${rows.map((r, i) => `
+        <div class="leaderboard-row">
+          <span>${i + 1}</span>
+          <span>${r.displayName || r.key}</span>
+          <span>${r.gold || 0}</span>
+          <span>${r.tamamonCount || 0}</span>
+          <span>${r.hasTalisman ? "Evet" : "Hayır"}</span>
+          <span>${r.battlesWon || 0}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function healAtVillage() {
@@ -1435,7 +1483,7 @@ function searchIsland(location) {
 function attackEnemy(strong) {
   const player = STATE.player;
   const enemy = STATE.currentEnemy;
-  const attackValue = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
+  const attackValue = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length;
   let damage = attackValue + (strong ? Math.floor(Math.random() * 3 + 2) : Math.floor(Math.random() * 3));
   let enemyDamage = null;
   if (strong && Math.random() > 0.85) {
@@ -1453,6 +1501,7 @@ function attackEnemy(strong) {
     const goldGain = Math.floor(Math.random() * 8 + 6);
     STATE.message += ` ${enemy.name} yenildi! Altın ve övgü kazandın.`;
     STATE.player.gold += goldGain;
+    STATE.player.battlesWon = (STATE.player.battlesWon || 0) + 1;
     STATE.scene = "village";
     STATE.currentEnemy = null;
     renderApp();
@@ -1474,7 +1523,7 @@ function enemyAttack() {
   const player = STATE.player;
   const enemy = STATE.currentEnemy;
   const attackValue = enemy.attack + Math.floor(Math.random() * 3);
-  const defenseValue = player.defense + (player.companion ? 1 : 0);
+  const defenseValue = player.defense;
   const damage = Math.max(1, attackValue - defenseValue);
   player.hp -= damage;
   STATE.message += ` Düşman ${damage} hasar verdi.`;
@@ -1551,4 +1600,16 @@ function buyItem(name) {
   if (btn) btn.textContent = soundEnabled ? "🔊" : "🔇";
 })();
 
-renderApp();
+const launchedFromLink = (function initFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const playerParam = params.get("oyuncu");
+  if (playerParam && CHARACTERS.some(c => c.key === playerParam)) {
+    selectCharacter(playerParam);
+    return true;
+  }
+  return false;
+})();
+
+if (!launchedFromLink) {
+  renderApp();
+}

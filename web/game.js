@@ -174,6 +174,19 @@ const scenes = {
   end: renderEnd,
 };
 
+const ICONS = {
+  dragon: '<svg viewBox="0 0 24 24"><path d="M2 20c4-2 6-8 10-8 3 0 3 3 6 3 2 0 3-2 4-5-1 6-5 12-11 12-4 0-7-1-9-2z" fill="#ffdca0"/></svg>',
+  village: '<svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z" fill="#ffdca0"/></svg>',
+  island: '<svg viewBox="0 0 24 24"><path d="M3 18l5-8 3 4 4-7 6 11z" fill="#ffdca0"/></svg>',
+  battle: '<svg viewBox="0 0 24 24"><path d="M4 20L20 4M4 4l16 16" stroke="#ffdca0" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  shop: '<svg viewBox="0 0 24 24"><path d="M7 8h10l1 12H6z" fill="#ffdca0"/><path d="M9 8a3 3 0 0 1 6 0" stroke="#ffdca0" stroke-width="2" fill="none"/></svg>',
+  tamamon: '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.2 21 12 17.27 5.8 21 7 14.14l-5-4.87 7.1-1.01z" fill="#ffdca0"/></svg>',
+  english: '<svg viewBox="0 0 24 24"><path d="M4 4h7v16H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 4h7a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-7V4z" fill="#ffdca0"/></svg>',
+  basak: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.36C.7 9.7 2 6 5.5 6c2 0 3.3 1.2 4 2.3.7-1.1 2-2.3 4-2.3 3.5 0 4.8 3.7 3 6.64C19 16.65 12 21 12 21z" fill="#ffdca0"/></svg>',
+  hero: '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffdca0"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zM5 17h14v3H5zM6 7h12v10H6z" fill="#ffdca0"/></svg>',
+};
+
 function renderApp() {
   const app = document.getElementById("app");
   app.classList.remove("scene-enter");
@@ -186,10 +199,7 @@ function renderApp() {
 function renderMenu(app) {
   app.innerHTML = `
     <div class="panel">
-      <div class="scene-banner">
-        <h3>Ejderha Adası'na hoş geldin</h3>
-        <p>Işıl Dengenin yolunu seç ve maceranın ritmini hisset.</p>
-      </div>
+      ${renderSceneBanner("Ejderha Adası'na hoş geldin", "Işıl Dengenin yolunu seç ve maceranın ritmini hisset.", ICONS.dragon)}
       <h2 class="section-title">Ana Menü</h2>
       <div class="button-grid">
         <button class="primary" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
@@ -201,11 +211,14 @@ function renderMenu(app) {
   `;
 }
 
-function renderSceneBanner(title, subtitle) {
+function renderSceneBanner(title, subtitle, icon) {
   return `
     <div class="scene-banner">
-      <h3>${title}</h3>
-      <p>${subtitle}</p>
+      ${icon ? `<div class="scene-icon">${icon}</div>` : ""}
+      <div class="scene-banner-text">
+        <h3>${title}</h3>
+        <p>${subtitle}</p>
+      </div>
     </div>
   `;
 }
@@ -240,7 +253,7 @@ function renderVillage(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Sahil Kasabası", "Denizin tuz kokusu, köyün sıcak ateşiyle karışıyor.")}
+      ${renderSceneBanner("Sahil Kasabası", "Denizin tuz kokusu, köyün sıcak ateşiyle karışıyor.", ICONS.village)}
       <h2 class="section-title">Kasaba</h2>
       <p>Kasabada dinlen, pazarda alışveriş yap veya İngilizce ve Tamamon yeteneklerini geliştir. Seçtiğin karakterin yeteneklerini kullanarak keşifler, savaşlar ve mini oyunlarla maceran ilerleyecek.</p>
       <div class="button-grid">
@@ -264,7 +277,7 @@ function renderIsland(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Ejderha Adası", "Sisler ve fırtına bulutları arasında gerçek bir macera seni bekliyor.")}
+      ${renderSceneBanner("Ejderha Adası", "Sisler ve fırtına bulutları arasında gerçek bir macera seni bekliyor.", ICONS.island)}
       <h2 class="section-title">Keşif</h2>
       <p>${location}</p>
       <div class="button-grid">
@@ -287,7 +300,7 @@ function renderBattle(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.")}
+      ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.", ICONS.battle)}
       <div class="card">
         <h3>${enemy.name}</h3>
         <p>${enemy.description}</p>
@@ -307,12 +320,21 @@ function renderBattle(app) {
   `;
 }
 
+const TYPE_COLORS = {
+  "Ateş": "#ff7043",
+  "Su": "#4db1ff",
+  "Toprak": "#8bc34a",
+  "Hava": "#80cbc4",
+  "Yıldırım": "#ffd54f",
+  "Buz": "#81d4fa",
+};
+
 function renderTamamon(app) {
   const cards = STATE.player.tamamonlar
     .map(t => `
-      <div class="card">
+      <div class="card" style="border-left: 4px solid ${TYPE_COLORS[t.type] || "#f8b84c"};">
         <h3>${t.emoji} ${t.name}</h3>
-        <p><strong>Tip:</strong> ${t.type}</p>
+        <p><strong>Tip:</strong> <span style="color: ${TYPE_COLORS[t.type] || "#f8b84c"};">${t.type}</span></p>
         <p>${t.description}</p>
       </div>
     `)
@@ -321,7 +343,7 @@ function renderTamamon(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      <h2 class="section-title">Tamamon Koleksiyonun</h2>
+      ${renderSceneBanner("Tamamon Koleksiyonun", "Adada bulduğun sadık dostlarının hepsi burada.", ICONS.tamamon)}
       ${cards || '<p>Henüz hiçbir Tamamon toplamadın. Adayı keşfetmeye başla!</p>'}
       <div class="button-grid">
         <button class="primary" onclick="gotoScene('village')">Kasabaya Geri Dön</button>
@@ -339,7 +361,7 @@ function renderEnglishPractice(app) {
     app.innerHTML = `
       ${renderStatus()}
       <div class="panel">
-        ${renderSceneBanner("İngilizce Ustası Ol", "Farklı oyunlarla öğren, altın kazan ve maceranın gücünü artır.")}
+        ${renderSceneBanner("İngilizce Ustası Ol", "Farklı oyunlarla öğren, altın kazan ve maceranın gücünü artır.", ICONS.english)}
         <p>İngilizce çalışırken altın da kazanabilirsin. Bu bölümde üç farklı mini oyun var:</p>
         <ul>
           <li>Kelime eşleştirme (sürükle-bırak): İngilizce kelimeyi doğru karta sürükle.</li>
@@ -372,7 +394,7 @@ function renderEnglishPractice(app) {
     app.innerHTML = `
       ${renderStatus()}
       <div class="panel">
-        ${renderSceneBanner(modeLabel, "Kelimeyi doğru karta sürükleyip bırak.")}
+        ${renderSceneBanner(modeLabel, "Kelimeyi doğru karta sürükleyip bırak.", ICONS.english)}
         <div class="drag-source-row">
           <div class="drag-chip" id="drag-chip">${question.sourceWord}</div>
         </div>
@@ -403,7 +425,7 @@ function renderEnglishPractice(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner(modeLabel, "Doğru cevabı seç ve altınla ödüllendirileceksin.")}
+      ${renderSceneBanner(modeLabel, "Doğru cevabı seç ve altınla ödüllendirileceksin.", ICONS.english)}
       <p>${question.prompt}</p>
       <div class="card">
         <div class="button-grid">
@@ -571,7 +593,7 @@ function renderBasak(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Sevimli Kız Başak", "Kasabanın kenarında duran neşeli bir kız seni fark ediyor.")}
+      ${renderSceneBanner("Sevimli Kız Başak", "Kasabanın kenarında duran neşeli bir kız seni fark ediyor.", ICONS.basak)}
       <div class="card">
         <h3>Başak</h3>
         <p>${BASAK.description}</p>
@@ -609,7 +631,7 @@ function renderShop(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Kasaba Pazarı", "Takas tezgâhları ve esrarengiz satıcılar seni bekliyor.")}
+      ${renderSceneBanner("Kasaba Pazarı", "Takas tezgâhları ve esrarengiz satıcılar seni bekliyor.", ICONS.shop)}
       <h2 class="section-title">Alışveriş</h2>
       <div class="cards">${list}</div>
       <div class="button-grid">
@@ -655,7 +677,7 @@ function renderCharacterSelection(app) {
 
   app.innerHTML = `
     <div class="panel">
-      ${renderSceneBanner("Karakter Seçimi", "Ejderha Adası için bir kahraman seç.")}
+      ${renderSceneBanner("Karakter Seçimi", "Ejderha Adası için bir kahraman seç.", ICONS.hero)}
       <p>Her karakter farklı bir oyun tarzına sahiptir. Seçim, macerana güçlü bir başlangıç sağlar.</p>
       <div class="cards">${cards}</div>
       <div class="button-grid">
@@ -668,7 +690,7 @@ function renderCharacterSelection(app) {
 function renderAbout(app) {
   app.innerHTML = `
     <div class="panel">
-      ${renderSceneBanner("Oyun Hakkında", "Ejderha Adası macerasının tüm yönlerini keşfet.")}
+      ${renderSceneBanner("Oyun Hakkında", "Ejderha Adası macerasının tüm yönlerini keşfet.", ICONS.scroll)}
       <h2 class="section-title">Oyun Açıklaması</h2>
       <p>"Işıl Dengenin oyunu Ejderha Adası" seni büyülü bir adada geçen hikâyeye davet ediyor. Bu oyunda dört farklı karakterden birini seçerek macerana başlarsın:</p>
       <ul>

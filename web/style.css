@@ -67,11 +67,18 @@ p {
 }
 
 .scene-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   padding: 18px 20px;
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(248, 184, 76, 0.16), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.14);
   margin-bottom: 18px;
+}
+
+.scene-banner-text {
+  flex: 1;
 }
 
 .scene-banner h3 {
@@ -82,6 +89,24 @@ p {
 .scene-banner p {
   margin: 0;
   color: #e8e4d8;
+}
+
+.scene-icon {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, rgba(248, 184, 76, 0.35), rgba(21, 44, 71, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.scene-icon svg {
+  width: 34px;
+  height: 34px;
 }
 
 .button-grid {

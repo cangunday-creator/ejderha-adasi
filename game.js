@@ -176,8 +176,11 @@ const scenes = {
 
 function renderApp() {
   const app = document.getElementById("app");
+  app.classList.remove("scene-enter");
+  void app.offsetWidth;
   app.innerHTML = "";
   scenes[STATE.scene](app);
+  app.classList.add("scene-enter");
 }
 
 function renderMenu(app) {
@@ -339,7 +342,7 @@ function renderEnglishPractice(app) {
         ${renderSceneBanner("İngilizce Ustası Ol", "Farklı oyunlarla öğren, altın kazan ve maceranın gücünü artır.")}
         <p>İngilizce çalışırken altın da kazanabilirsin. Bu bölümde üç farklı mini oyun var:</p>
         <ul>
-          <li>Kelime eşleştirme: İngilizceyi Türkçeye bağla.</li>
+          <li>Kelime eşleştirme (sürükle-bırak): İngilizce kelimeyi doğru karta sürükle.</li>
           <li>Cümle tamamlama: bağlam içinde doğru kelimeyi seç.</li>
           <li>Türkçe'den İngilizce'ye: kelimeyi ters yönde seç.</li>
         </ul>
@@ -364,6 +367,38 @@ function renderEnglishPractice(app) {
     : STATE.englishMode === "fill"
       ? "Cümle Tamamlama"
       : "Türkçe'den İngilizce'ye";
+
+  if (STATE.englishMode === "match") {
+    app.innerHTML = `
+      ${renderStatus()}
+      <div class="panel">
+        ${renderSceneBanner(modeLabel, "Kelimeyi doğru karta sürükleyip bırak.")}
+        <div class="drag-source-row">
+          <div class="drag-chip" id="drag-chip">${question.sourceWord}</div>
+        </div>
+        <div class="cards">
+          ${question.options
+            .map(
+              option => `
+                <div class="card drop-zone" data-option="${option}">
+                  <p>${option}</p>
+                </div>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="button-grid">
+          <button class="primary" onclick="setEnglishMode('menu')">Diğer İngilizce Oyunlarına Dön</button>
+          <button class="secondary" onclick="gotoScene('village')">Kasabaya Dön</button>
+        </div>
+      </div>
+      <div class="panel">
+        <p>${STATE.message}</p>
+      </div>
+    `;
+    setupMatchDrag(question);
+    return;
+  }
 
   app.innerHTML = `
     ${renderStatus()}
@@ -431,6 +466,7 @@ function generateEnglishQuestion(mode) {
     answer: word.turkish,
     options: shuffleArray(allOptions),
     reward: 5,
+    sourceWord: word.english,
   };
 }
 
@@ -456,6 +492,65 @@ function answerEnglish(index) {
     STATE.message = `Doğru! ${question.answer} cevabını seçtin. ${reward} altın kazandın.`;
   } else {
     STATE.message = `Yanlış. Doğru cevap ${question.answer} idi.`;
+  }
+  STATE.englishQuestion = null;
+  renderApp();
+}
+
+function setupMatchDrag(question) {
+  const chip = document.getElementById("drag-chip");
+  if (!chip) return;
+
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  chip.style.touchAction = "none";
+
+  chip.addEventListener("pointerdown", e => {
+    dragging = true;
+    chip.setPointerCapture(e.pointerId);
+    const rect = chip.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    chip.style.position = "fixed";
+    chip.style.left = `${rect.left}px`;
+    chip.style.top = `${rect.top}px`;
+    chip.style.width = `${rect.width}px`;
+    chip.style.zIndex = "1000";
+    chip.classList.add("dragging");
+  });
+
+  chip.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    chip.style.left = `${e.clientX - offsetX}px`;
+    chip.style.top = `${e.clientY - offsetY}px`;
+  });
+
+  chip.addEventListener("pointerup", e => {
+    if (!dragging) return;
+    dragging = false;
+    chip.classList.remove("dragging");
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    const zone = target ? target.closest(".drop-zone") : null;
+    if (zone) {
+      resolveMatchDrop(zone.dataset.option, question);
+    } else {
+      chip.style.position = "";
+      chip.style.left = "";
+      chip.style.top = "";
+      chip.style.width = "";
+    }
+  });
+}
+
+function resolveMatchDrop(guess, question) {
+  const reward = question.reward || 5;
+  if (guess === question.answer) {
+    STATE.player.gold += reward;
+    STATE.message = `Doğru! ${question.answer} kartına bıraktın. ${reward} altın kazandın.`;
+  } else {
+    STATE.message = `Yanlış kart. Doğru cevap ${question.answer} idi.`;
   }
   STATE.englishQuestion = null;
   renderApp();

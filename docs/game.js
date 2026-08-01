@@ -127,10 +127,66 @@ const ENGLISH_WORDS = [
   { english: "fish", turkish: "balık" },
   { english: "rabbit", turkish: "tavşan" },
   { english: "horse", turkish: "at" },
+  { english: "lion", turkish: "aslan" },
+  { english: "bear", turkish: "ayı" },
+  { english: "wolf", turkish: "kurt" },
+  { english: "dragon", turkish: "ejderha" },
+  { english: "snake", turkish: "yılan" },
+  { english: "turtle", turkish: "kaplumbağa" },
+  { english: "frog", turkish: "kurbağa" },
+  { english: "owl", turkish: "baykuş" },
+  { english: "spider", turkish: "örümcek" },
+  { english: "red", turkish: "kırmızı" },
+  { english: "blue", turkish: "mavi" },
+  { english: "green", turkish: "yeşil" },
+  { english: "yellow", turkish: "sarı" },
+  { english: "black", turkish: "siyah" },
+  { english: "white", turkish: "beyaz" },
+  { english: "orange", turkish: "turuncu" },
+  { english: "purple", turkish: "mor" },
+  { english: "pink", turkish: "pembe" },
+  { english: "brown", turkish: "kahverengi" },
+  { english: "one", turkish: "bir" },
+  { english: "two", turkish: "iki" },
+  { english: "three", turkish: "üç" },
+  { english: "four", turkish: "dört" },
+  { english: "five", turkish: "beş" },
+  { english: "six", turkish: "altı" },
+  { english: "seven", turkish: "yedi" },
+  { english: "eight", turkish: "sekiz" },
+  { english: "nine", turkish: "dokuz" },
+  { english: "ten", turkish: "on" },
   { english: "tree", turkish: "ağaç" },
   { english: "water", turkish: "su" },
   { english: "fire", turkish: "ateş" },
   { english: "stone", turkish: "taş" },
+  { english: "mountain", turkish: "dağ" },
+  { english: "forest", turkish: "orman" },
+  { english: "sea", turkish: "deniz" },
+  { english: "sun", turkish: "güneş" },
+  { english: "moon", turkish: "ay" },
+  { english: "star", turkish: "yıldız" },
+  { english: "cloud", turkish: "bulut" },
+  { english: "rain", turkish: "yağmur" },
+  { english: "wind", turkish: "rüzgar" },
+  { english: "snow", turkish: "kar" },
+  { english: "island", turkish: "ada" },
+  { english: "cave", turkish: "mağara" },
+  { english: "sword", turkish: "kılıç" },
+  { english: "shield", turkish: "kalkan" },
+  { english: "key", turkish: "anahtar" },
+  { english: "map", turkish: "harita" },
+  { english: "treasure", turkish: "hazine" },
+  { english: "gold", turkish: "altın" },
+  { english: "ship", turkish: "gemi" },
+  { english: "boat", turkish: "tekne" },
+  { english: "castle", turkish: "kale" },
+  { english: "door", turkish: "kapı" },
+  { english: "bridge", turkish: "köprü" },
+  { english: "book", turkish: "kitap" },
+  { english: "lamp", turkish: "lamba" },
+  { english: "hat", turkish: "şapka" },
+  { english: "boot", turkish: "çizme" },
 ];
 
 const SHOP = [
@@ -230,6 +286,61 @@ const ENGLISH_SENTENCES = [
     sentence: "Night falls and the sky becomes full of ____.",
     answer: "stars",
     options: ["stones", "stars", "trees"],
+  },
+  {
+    sentence: "The knight hides behind his big ____.",
+    answer: "shield",
+    options: ["shield", "cloud", "boot"],
+  },
+  {
+    sentence: "We sail across the sea in a wooden ____.",
+    answer: "ship",
+    options: ["ship", "cave", "key"],
+  },
+  {
+    sentence: "The wizard opens the old door with a golden ____.",
+    answer: "key",
+    options: ["key", "wolf", "moon"],
+  },
+  {
+    sentence: "A scary ____ lives deep inside the dark cave.",
+    answer: "bear",
+    options: ["bear", "rain", "hat"],
+  },
+  {
+    sentence: "The princess wears a beautiful ____ dress.",
+    answer: "pink",
+    options: ["pink", "ten", "bridge"],
+  },
+  {
+    sentence: "You need a ____ to cross the river safely.",
+    answer: "bridge",
+    options: ["bridge", "snow", "lion"],
+  },
+  {
+    sentence: "The wizard reads an old magic ____ every night.",
+    answer: "book",
+    options: ["book", "frog", "castle"],
+  },
+  {
+    sentence: "On top of the ____, the air is very cold.",
+    answer: "mountain",
+    options: ["mountain", "spider", "lamp"],
+  },
+  {
+    sentence: "The castle has a tall stone ____.",
+    answer: "door",
+    options: ["door", "turtle", "orange"],
+  },
+  {
+    sentence: "In winter, white ____ covers the whole forest.",
+    answer: "snow",
+    options: ["snow", "owl", "sword"],
+  },
+  {
+    sentence: "The pirate map shows a hidden ____ on the island.",
+    answer: "treasure",
+    options: ["treasure", "wind", "snake"],
   },
 ];
 
@@ -640,6 +751,7 @@ function setupMatchDrag(question) {
     chip.style.top = `${rect.top}px`;
     chip.style.width = `${rect.width}px`;
     chip.style.zIndex = "1000";
+    chip.style.pointerEvents = "none";
     chip.classList.add("dragging");
   });
 
@@ -655,6 +767,7 @@ function setupMatchDrag(question) {
     chip.classList.remove("dragging");
     const target = document.elementFromPoint(e.clientX, e.clientY);
     const zone = target ? target.closest(".drop-zone") : null;
+    chip.style.pointerEvents = "";
     if (zone) {
       resolveMatchDrop(zone.dataset.option, question);
     } else {

@@ -253,6 +253,8 @@ const STATE = {
   worldPosition: { x: 50, y: 80 },
   enemyHit: false,
   playerHit: false,
+  playerAttacking: false,
+  enemyAttacking: false,
 };
 
 const VILLAGE_DOORS = [
@@ -427,10 +429,8 @@ function renderStatus() {
   const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
   const defense = player.defense + (player.companion ? 1 : 0);
   const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
-  const hitClass = STATE.playerHit ? "shake" : "";
-  STATE.playerHit = false;
   return `
-    <div class="panel ${hitClass}">
+    <div class="panel">
       <div class="status-row">
         <div class="status-identity">
           ${character ? `<div class="avatar-circle avatar-circle-small">${character.avatar}</div>` : ""}
@@ -524,21 +524,49 @@ function renderIsland(app) {
   `;
 }
 
+function combatFxClass(hit, attacking, side) {
+  if (hit && attacking) return `fx-both-${side}`;
+  if (hit) return "fx-shake";
+  if (attacking) return `fx-lunge-${side}`;
+  return "";
+}
+
 function renderBattle(app) {
   const enemy = STATE.currentEnemy;
   const player = STATE.player;
+  const character = CHARACTERS.find(c => c.key === STATE.characterKey);
+  const playerAvatar = character ? character.avatar : ICONS.hero;
   const battleIcon = ICONS[enemy.icon] || ICONS.battle;
-  const enemyHitClass = STATE.enemyHit ? "shake" : "";
+
+  const playerClasses = combatFxClass(STATE.playerHit, STATE.playerAttacking, "right");
+  const enemyClasses = combatFxClass(STATE.enemyHit, STATE.enemyAttacking, "left");
+  STATE.playerHit = false;
   STATE.enemyHit = false;
+  STATE.playerAttacking = false;
+  STATE.enemyAttacking = false;
+
+  const playerHpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
+  const enemyHpPercent = Math.max(0, (enemy.hp / (enemy.maxHp || enemy.hp)) * 100);
+
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
       ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.", battleIcon)}
-      <div class="card ${enemyHitClass}">
-        <div class="avatar-circle avatar-circle-large">${battleIcon}</div>
-        <h3>${enemy.name}</h3>
+      <div class="battle-arena">
+        <div class="battle-combatant ${playerClasses}">
+          <div class="battle-avatar">${playerAvatar}</div>
+          <span class="battle-name">${player.name}</span>
+          <div class="battle-hp-bar"><div class="battle-hp-fill" style="width: ${playerHpPercent}%;"></div></div>
+        </div>
+        <div class="battle-vs">⚔️</div>
+        <div class="battle-combatant ${enemyClasses}">
+          <div class="battle-avatar">${battleIcon}</div>
+          <span class="battle-name">${enemy.name}</span>
+          <div class="battle-hp-bar"><div class="battle-hp-fill enemy" style="width: ${enemyHpPercent}%;"></div></div>
+        </div>
+      </div>
+      <div class="card">
         <p>${enemy.description}</p>
-        <p>HP: ${enemy.hp}</p>
         <p>Saldırı: ${enemy.attack} / Savunma: ${enemy.defense}</p>
       </div>
       <div class="button-grid">
@@ -1131,6 +1159,7 @@ function searchIsland(location) {
       enemy = ENEMIES.find(e => e.name === "Deniz Canavarı") || enemy;
     }
     STATE.currentEnemy = JSON.parse(JSON.stringify(enemy));
+    STATE.currentEnemy.maxHp = STATE.currentEnemy.hp;
     STATE.scene = "battle";
     STATE.message = location === "Kıyı"
       ? " Dalgalar arasından bir Deniz Canavarı fırladı!"
@@ -1160,6 +1189,7 @@ function attackEnemy(strong) {
     STATE.message = ` ${strong ? "Güçlü darbe" : "Saldırı"} ile ${damage} hasar verdin.`;
     enemyDamage = damage;
     STATE.enemyHit = true;
+    STATE.playerAttacking = true;
   }
 
   if (enemy.hp <= 0) {
@@ -1189,6 +1219,7 @@ function enemyAttack() {
   player.hp -= damage;
   STATE.message += ` Düşman ${damage} hasar verdi.`;
   STATE.playerHit = true;
+  STATE.enemyAttacking = true;
 
   if (player.hp <= 0) {
     STATE.message += " Maceran sona erdi.";

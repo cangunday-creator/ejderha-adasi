@@ -140,6 +140,7 @@ const SHOP = [
 ];
 
 const SAVE_KEY = "ejderhaAdasiSave";
+const TUTORIAL_SEEN_KEY = "ejderhaAdasiTutorialSeen";
 
 const ICONS = {
   dragon: '<svg viewBox="0 0 24 24"><path d="M2 20c4-2 6-8 10-8 3 0 3 3 6 3 2 0 3-2 4-5-1 6-5 12-11 12-4 0-7-1-9-2z" fill="#ffdca0"/></svg>',
@@ -233,6 +234,7 @@ const ENGLISH_SENTENCES = [
 const scenes = {
   menu: renderMenu,
   character: renderCharacterSelection,
+  tutorial: renderTutorial,
   village: renderVillage,
   island: renderIsland,
   battle: renderBattle,
@@ -267,6 +269,7 @@ function renderMenu(app) {
       <div class="button-grid">
         ${saved ? `<button class="primary" onclick="continueGame()">${continueLabel}</button>` : ""}
         <button class="${saved ? "secondary" : "primary"}" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
+        <button class="secondary" onclick="gotoScene('tutorial')">Nasıl Oynanır?</button>
         <button class="secondary" onclick="gotoScene('about')">Oyun Hakkında</button>
         <button class="secondary" onclick="gotoScene('tamamon')">Tamamon Koleksiyonu</button>
         <button class="secondary" onclick="resetGame()">Sıfırla</button>
@@ -326,6 +329,7 @@ function renderVillage(app) {
     ${renderStatus()}
     <div class="panel">
       ${renderSceneBanner("Sahil Kasabası", "Bir yere gitmek için haritada üzerine dokun ya da yürüyerek yaklaş.", ICONS.village)}
+      <p class="objective-hint">${getObjectiveHint(STATE.player)}</p>
       <div class="world-map" id="village-map" onclick="onWorldMapClick(event, 'village-map')">
         ${VILLAGE_DOORS.map(door => `
           <div class="world-door" style="left: ${door.x}%; top: ${door.y}%;" onclick="event.stopPropagation(); walkTo(${door.x}, ${door.y}, () => gotoScene('${door.action}'))">
@@ -356,7 +360,8 @@ function renderIsland(app) {
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
-      ${renderSceneBanner("Ejderha Adası", "Sisler ve fırtına bulutları arasında gerçek bir macera seni bekliyor.", ICONS.island)}
+      ${renderSceneBanner("Ejderha Adası", "Bir bölgeye gitmek için haritada üzerine dokun. Kıyıya yaklaşırken dikkatli ol!", ICONS.island)}
+      <p class="objective-hint">${getObjectiveHint(STATE.player)}</p>
       <p>${location}</p>
       <div class="world-map island-map" id="island-map" onclick="onWorldMapClick(event, 'island-map')">
         <div class="world-sea">
@@ -784,6 +789,53 @@ function renderCharacterSelection(app) {
   `;
 }
 
+function renderTutorial(app) {
+  app.innerHTML = `
+    <div class="panel">
+      ${renderSceneBanner("Nasıl Oynanır?", "Maceraya başlamadan önce kısa bir rehber.", ICONS.scroll)}
+      <div class="cards">
+        <div class="card">
+          <h3>🗺️ Haritada Yürüme</h3>
+          <p>Köyde ve adada haritanın üzerine dokun ya da tıkla — karakterin oraya yürür. Yuvarlak ikonlar birer <strong>kapı</strong>: üzerine dokununca o aktivite açılır (Pazar, Tamamon, İngilizce, Başak, Ada geçişi, Mağara/Harabe/Volkan/Kıyı).</p>
+        </div>
+        <div class="card">
+          <h3>🎯 Amacın Ne?</h3>
+          <p>Ejderha Adası'nda gizli bir <strong>Tılsım</strong> var. Bölgeleri keşfederek onu bul, yolda <strong>Tamamon</strong>lar topla, <strong>İngilizce</strong> oynayarak altın kazan ve sonunda karşına çıkan Ejderha ile savaş!</p>
+        </div>
+        <div class="card">
+          <h3>🌊 Dikkat</h3>
+          <p>Kıyıya yaklaşırsan dalgaların arasından bir <strong>Deniz Canavarı</strong> çıkabilir — hazırlıklı ol! Savaşta HP'n biterse köye geri dönersin, kaybetmiş sayılmazsın.</p>
+        </div>
+        <div class="card">
+          <h3>💾 Kaydet</h3>
+          <p>Köydeki "Oyunu Kaydet" butonuyla ilerlemeni kaydedebilirsin. Bir sonraki girişinde ana menüden "Kaldığın Yerden Devam Et" ile aynı yerden sürdürürsün.</p>
+        </div>
+      </div>
+      <div class="button-grid">
+        <button class="primary" onclick="dismissTutorial()">Anladım, Maceraya Başla!</button>
+      </div>
+    </div>
+  `;
+}
+
+function dismissTutorial() {
+  localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+  gotoScene(STATE.characterKey ? "village" : "menu");
+}
+
+function getObjectiveHint(player) {
+  if (!player.hasTalisman && player.tamamonlar.length === 0) {
+    return "🎯 Görev: Ejderha Adası'na git, bölgeleri keşfet ve kayıp Tılsımı ara!";
+  }
+  if (!player.hasTalisman) {
+    return "🎯 Görev: Tılsım hâlâ kayıp — adadaki bölgeleri keşfetmeye devam et.";
+  }
+  if (player.tamamonlar.length < TAMAMONLAR.length) {
+    return `🎯 Görev: Tamamon topla (${player.tamamonlar.length}/${TAMAMONLAR.length}) ve İngilizce oynayarak altın kazan.`;
+  }
+  return "🎯 Tebrikler! Tılsımı buldun ve tüm Tamamonları topladın — artık gerçek bir Ejderha Adası kahramanısın!";
+}
+
 function renderAbout(app) {
   app.innerHTML = `
     <div class="panel">
@@ -799,11 +851,14 @@ function renderAbout(app) {
       <h2 class="section-title">Nasıl Oynanır?</h2>
       <ul>
         <li><strong>Karakter seçimi</strong> ile oyuna başla. Her karakter farklı başlangıç istatistiklerine sahiptir.</li>
-        <li><strong>Kasabada</strong> dinlenebilir, pazar yerine gidebilir, Tamamon koleksiyonuna bakabilir, İngilizce oyunlarına geçebilir veya Başak ile tanışıp onu yol arkadaşın yapabilirsin.</li>
-        <li><strong>Adayı keşfet</strong>: Mağara, harabe, kıyı ve volkan bölgelerinde farklı olaylar yaşanır. Hazine bulabilir, Tamamon yakalayabilir veya düşmanlarla karşılaşabilirsin.</li>
+        <li><strong>Haritada yürü</strong>: Kasabada ve adada haritanın üzerine dokun/tıkla — karakterin oraya yürür. Yuvarlak ikonlar birer <strong>kapı</strong>dır; üzerine gidince o aktivite açılır.</li>
+        <li><strong>Kasabadaki kapılar</strong>: Pazar Yeri, Tamamon Koleksiyonu, İngilizce Kartları, Başak (yol arkadaşın) ve Ejderha Adası'na geçiş.</li>
+        <li><strong>Adayı keşfet</strong>: Mağara, Harabe, Volkan ve Kıyı bölgelerine yürüyerek keşif yap. Hazine bulabilir, Tamamon yakalayabilir ya da düşmanla karşılaşabilirsin — kıyıya yaklaşırsan dalgalardan bir Deniz Canavarı çıkabilir!</li>
+        <li><strong>Görev ipucu</strong>: Kasaba ve ada ekranlarının üstünde sarı bir kutuda o an ne yapman gerektiğini söyleyen bir ipucu belirir.</li>
         <li><strong>Savaş</strong> sırasında normal saldırı, güçlü darbe, eşya kullanma veya kaçma seçeneklerini kullanabilirsin.</li>
         <li><strong>Altın kazan</strong> için sadece İngilizce oynaman gerekmez. Keşifler, savaşlar ve İngilizce mini oyunları seni ödüllendirir.</li>
         <li><strong>Tamamonlar</strong> topladıkça koleksiyonun büyür ve her biri sana avantaj sağlar.</li>
+        <li>Ana menüden istediğin zaman <strong>"Nasıl Oynanır?"</strong> rehberini tekrar açabilirsin.</li>
       </ul>
       <h2 class="section-title">İngilizce Mini Oyunları</h2>
       <p>İngilizce menüsünde üç farklı oyun türü bulunur:</p>
@@ -827,7 +882,7 @@ function selectCharacter(key) {
   if (!character) return;
   STATE.player = createPlayerFromCharacter(character);
   STATE.characterKey = key;
-  STATE.scene = "village";
+  STATE.scene = localStorage.getItem(TUTORIAL_SEEN_KEY) ? "village" : "tutorial";
   STATE.worldPosition = { x: 50, y: 80 };
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;

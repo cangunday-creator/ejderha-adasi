@@ -239,6 +239,16 @@ button.secondary:hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.objective-hint {
+  background: rgba(248, 184, 76, 0.14);
+  border: 1px solid rgba(248, 184, 76, 0.35);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin: 0 0 16px;
+  font-weight: 600;
+  color: #ffe6b0;
+}
+
 .world-map {
   position: relative;
   width: 100%;

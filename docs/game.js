@@ -170,6 +170,8 @@ const STATE = {
   englishMode: "menu",
   englishQuestion: null,
   worldPosition: { x: 50, y: 80 },
+  enemyHit: false,
+  playerHit: false,
 };
 
 const VILLAGE_DOORS = [
@@ -296,8 +298,10 @@ function renderStatus() {
   const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
   const defense = player.defense + (player.companion ? 1 : 0);
   const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
+  const hitClass = STATE.playerHit ? "shake" : "";
+  STATE.playerHit = false;
   return `
-    <div class="panel">
+    <div class="panel ${hitClass}">
       <div class="status-row">
         <div class="status-identity">
           ${character ? `<div class="avatar-circle avatar-circle-small">${character.avatar}</div>` : ""}
@@ -331,6 +335,8 @@ function renderVillage(app) {
       ${renderSceneBanner("Sahil Kasabası", "Bir yere gitmek için haritada üzerine dokun ya da yürüyerek yaklaş.", ICONS.village)}
       <p class="objective-hint">${getObjectiveHint(STATE.player)}</p>
       <div class="world-map" id="village-map" onclick="onWorldMapClick(event, 'village-map')">
+        <div class="world-cloud" style="left: 8%; top: 6%; width: 70px; height: 24px; animation-duration: 20s;"></div>
+        <div class="world-cloud" style="left: 62%; top: 10%; width: 50px; height: 18px; animation-duration: 15s;"></div>
         ${VILLAGE_DOORS.map(door => `
           <div class="world-door" style="left: ${door.x}%; top: ${door.y}%;" onclick="event.stopPropagation(); walkTo(${door.x}, ${door.y}, () => gotoScene('${door.action}'))">
             <div class="world-door-icon">${door.icon}</div>
@@ -364,6 +370,8 @@ function renderIsland(app) {
       <p class="objective-hint">${getObjectiveHint(STATE.player)}</p>
       <p>${location}</p>
       <div class="world-map island-map" id="island-map" onclick="onWorldMapClick(event, 'island-map')">
+        <div class="world-cloud" style="left: 15%; top: 5%; width: 60px; height: 20px; animation-duration: 18s;"></div>
+        <div class="world-cloud" style="left: 70%; top: 8%; width: 45px; height: 16px; animation-duration: 13s;"></div>
         <div class="world-sea">
           <div class="world-wave" style="left: 12%;">${ICONS.wave}</div>
           <div class="world-wave" style="left: 68%;">${ICONS.wave}</div>
@@ -391,11 +399,13 @@ function renderBattle(app) {
   const enemy = STATE.currentEnemy;
   const player = STATE.player;
   const battleIcon = ICONS[enemy.icon] || ICONS.battle;
+  const enemyHitClass = STATE.enemyHit ? "shake" : "";
+  STATE.enemyHit = false;
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
       ${renderSceneBanner("Savaş Alanı", "Düşmanla göz göze geldiğin an: cesaretini topla.", battleIcon)}
-      <div class="card">
+      <div class="card ${enemyHitClass}">
         <div class="avatar-circle avatar-circle-large">${battleIcon}</div>
         <h3>${enemy.name}</h3>
         <p>${enemy.description}</p>
@@ -604,7 +614,8 @@ function answerEnglish(index) {
   if (!question) return;
   const guess = question.options[index];
   const reward = question.reward || 5;
-  if (guess === question.answer) {
+  const correct = guess === question.answer;
+  if (correct) {
     STATE.player.gold += reward;
     STATE.message = `Doğru! ${question.answer} cevabını seçtin. ${reward} altın kazandın.`;
   } else {
@@ -612,6 +623,7 @@ function answerEnglish(index) {
   }
   STATE.englishQuestion = null;
   renderApp();
+  if (correct) showFloatingText(`+${reward}`, "gold");
 }
 
 function setupMatchDrag(question) {
@@ -663,7 +675,8 @@ function setupMatchDrag(question) {
 
 function resolveMatchDrop(guess, question) {
   const reward = question.reward || 5;
-  if (guess === question.answer) {
+  const correct = guess === question.answer;
+  if (correct) {
     STATE.player.gold += reward;
     STATE.message = `Doğru! ${question.answer} kartına bıraktın. ${reward} altın kazandın.`;
   } else {
@@ -671,6 +684,19 @@ function resolveMatchDrop(guess, question) {
   }
   STATE.englishQuestion = null;
   renderApp();
+  if (correct) showFloatingText(`+${reward}`, "gold");
+}
+
+function showFloatingText(text, type) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  const el = document.createElement("div");
+  el.className = `floating-text floating-${type || "gold"}`;
+  el.textContent = text;
+  el.style.left = `${40 + Math.random() * 20}%`;
+  el.style.top = "26%";
+  app.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
 }
 
 function shuffleArray(array) {
@@ -946,6 +972,7 @@ function searchIsland(location) {
   STATE.islandLocation = `${location} bölgesindesin.`;
   const player = STATE.player;
   let message = ` ${location} aranmaya başlandı.`;
+  let goldFloatingText = null;
 
   if (!player.hasTalisman && Math.random() < 0.2) {
     player.hasTalisman = true;
@@ -956,6 +983,7 @@ function searchIsland(location) {
     const goldFound = Math.floor(Math.random() * 6 + 5);
     player.gold += goldFound;
     message = ` ${location} içinde parlayan bir hazine buldun ve ${goldFound} altın kazandın.`;
+    goldFloatingText = `+${goldFound}`;
   } else if (Math.random() < 0.3) {
     const tamamon = TAMAMONLAR[Math.floor(Math.random() * TAMAMONLAR.length)];
     if (!player.tamamonlar.some(t => t.name === tamamon.name)) {
@@ -984,6 +1012,7 @@ function searchIsland(location) {
 
   STATE.message = message;
   renderApp();
+  if (goldFloatingText) showFloatingText(goldFloatingText, "gold");
 }
 
 function attackEnemy(strong) {
@@ -991,24 +1020,33 @@ function attackEnemy(strong) {
   const enemy = STATE.currentEnemy;
   const attackValue = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
   let damage = attackValue + (strong ? Math.floor(Math.random() * 3 + 2) : Math.floor(Math.random() * 3));
+  let enemyDamage = null;
   if (strong && Math.random() > 0.85) {
     STATE.message = "Güçlü darbe başarısız oldu.";
   } else {
     damage = Math.max(1, damage - enemy.defense);
     enemy.hp -= damage;
     STATE.message = ` ${strong ? "Güçlü darbe" : "Saldırı"} ile ${damage} hasar verdin.`;
+    enemyDamage = damage;
+    STATE.enemyHit = true;
   }
 
   if (enemy.hp <= 0) {
+    const goldGain = Math.floor(Math.random() * 8 + 6);
     STATE.message += ` ${enemy.name} yenildi! Altın ve övgü kazandın.`;
-    STATE.player.gold += Math.floor(Math.random() * 8 + 6);
+    STATE.player.gold += goldGain;
     STATE.scene = "village";
     STATE.currentEnemy = null;
     renderApp();
+    if (enemyDamage) showFloatingText(`-${enemyDamage}`, "damage");
+    showFloatingText(`+${goldGain}`, "gold");
     return;
   }
 
-  enemyAttack();
+  const playerDamage = enemyAttack();
+  renderApp();
+  if (enemyDamage) showFloatingText(`-${enemyDamage}`, "damage");
+  showFloatingText(`-${playerDamage}`, "damage");
 }
 
 function enemyAttack() {
@@ -1019,12 +1057,13 @@ function enemyAttack() {
   const damage = Math.max(1, attackValue - defenseValue);
   player.hp -= damage;
   STATE.message += ` Düşman ${damage} hasar verdi.`;
+  STATE.playerHit = true;
 
   if (player.hp <= 0) {
     STATE.message += " Maceran sona erdi.";
     STATE.scene = "end";
   }
-  renderApp();
+  return damage;
 }
 
 function useItem() {
@@ -1035,10 +1074,13 @@ function useItem() {
     return;
   }
   const item = player.inventory.shift();
-  if (ITEMS[item].type === "heal") {
-    player.hp = Math.min(player.maxHp, player.hp + ITEMS[item].value);
-    STATE.message = `${item} kullandın. ${ITEMS[item].value} can yeniledin.`;
-  } else if (ITEMS[item].type === "escape") {
+  const itemType = ITEMS[item].type;
+  let healAmount = 0;
+  if (itemType === "heal") {
+    healAmount = ITEMS[item].value;
+    player.hp = Math.min(player.maxHp, player.hp + healAmount);
+    STATE.message = `${item} kullandın. ${healAmount} can yeniledin.`;
+  } else if (itemType === "escape") {
     if (Math.random() < 0.7) {
       STATE.scene = "village";
       STATE.currentEnemy = null;
@@ -1046,11 +1088,12 @@ function useItem() {
     } else {
       STATE.message = `${item} başarısız oldu.`;
     }
-  } else if (ITEMS[item].type === "boost") {
+  } else if (itemType === "boost") {
     player.attack += ITEMS[item].value;
     STATE.message = `${item} kullandın. Saldırın geçici olarak arttı.`;
   }
   renderApp();
+  if (itemType === "heal") showFloatingText(`+${healAmount}`, "heal");
 }
 
 function fleeBattle() {
@@ -1058,11 +1101,13 @@ function fleeBattle() {
     STATE.scene = "village";
     STATE.currentEnemy = null;
     STATE.message = "Kaçmayı başardın.";
-  } else {
-    STATE.message = "Kaçamadın!";
-    enemyAttack();
+    renderApp();
+    return;
   }
+  STATE.message = "Kaçamadın!";
+  const damage = enemyAttack();
   renderApp();
+  showFloatingText(`-${damage}`, "damage");
 }
 
 function buyItem(name) {

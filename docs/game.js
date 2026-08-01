@@ -221,6 +221,88 @@ const SHOP = [
 ];
 
 const SAVE_KEY = "ejderhaAdasiSave";
+const SOUND_KEY = "ejderhaAdasiSound";
+
+let soundEnabled = localStorage.getItem(SOUND_KEY) !== "off";
+let audioCtx = null;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) return null;
+    audioCtx = new AudioCtor();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type, startDelay, volume) {
+  if (!soundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const startTime = ctx.currentTime + (startDelay || 0);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(volume || 0.18, startTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.02);
+}
+
+function playCoinSound() {
+  playTone(880, 0.12, "triangle", 0, 0.16);
+  playTone(1318, 0.16, "triangle", 0.06, 0.14);
+}
+
+function playHitSound() {
+  playTone(140, 0.15, "square", 0, 0.14);
+}
+
+function playHealSound() {
+  playTone(520, 0.14, "sine", 0, 0.14);
+  playTone(780, 0.18, "sine", 0.08, 0.12);
+}
+
+function playWrongSound() {
+  playTone(220, 0.1, "sawtooth", 0, 0.12);
+  playTone(160, 0.18, "sawtooth", 0.08, 0.12);
+}
+
+function playDiscoverySound() {
+  playTone(660, 0.12, "triangle", 0, 0.15);
+  playTone(990, 0.12, "triangle", 0.09, 0.14);
+  playTone(1320, 0.2, "triangle", 0.18, 0.13);
+}
+
+function playVictorySound() {
+  playTone(523, 0.16, "triangle", 0, 0.16);
+  playTone(659, 0.16, "triangle", 0.14, 0.16);
+  playTone(784, 0.28, "triangle", 0.28, 0.16);
+}
+
+function playSoundForType(type) {
+  if (type === "gold") playCoinSound();
+  else if (type === "damage") playHitSound();
+  else if (type === "heal") playHealSound();
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem(SOUND_KEY, soundEnabled ? "on" : "off");
+  const btn = document.getElementById("sound-toggle");
+  if (btn) btn.textContent = soundEnabled ? "🔊" : "🔇";
+  if (soundEnabled) {
+    getAudioContext();
+    playCoinSound();
+  }
+}
 const TUTORIAL_SEEN_KEY = "ejderhaAdasiTutorialSeen";
 
 const ICONS = {
@@ -501,6 +583,11 @@ function renderIsland(app) {
       <div class="world-map island-map" id="island-map" onclick="onWorldMapClick(event, 'island-map')">
         <div class="world-cloud" style="left: 15%; top: 5%; width: 60px; height: 20px; animation-duration: 18s;"></div>
         <div class="world-cloud" style="left: 70%; top: 8%; width: 45px; height: 16px; animation-duration: 13s;"></div>
+        <div class="cave-mist" style="left: 12%; top: 30%;"></div>
+        <div class="cave-mist" style="left: 20%; top: 36%; animation-delay: 1.5s;"></div>
+        <div class="volcano-ember" style="left: 53%; top: 14%;"></div>
+        <div class="volcano-ember" style="left: 57%; top: 15%; animation-delay: 0.7s;"></div>
+        <div class="volcano-ember" style="left: 55%; top: 16%; animation-delay: 1.4s;"></div>
         <div class="world-sea">
           <div class="world-wave" style="left: 12%;">${ICONS.wave}</div>
           <div class="world-wave" style="left: 68%;">${ICONS.wave}</div>
@@ -787,7 +874,11 @@ function answerEnglish(index) {
   }
   STATE.englishQuestion = null;
   renderApp();
-  if (correct) showFloatingText(`+${reward}`, "gold");
+  if (correct) {
+    showFloatingText(`+${reward}`, "gold");
+  } else {
+    playWrongSound();
+  }
 }
 
 function setupMatchDrag(question) {
@@ -850,10 +941,16 @@ function resolveMatchDrop(guess, question) {
   }
   STATE.englishQuestion = null;
   renderApp();
-  if (correct) showFloatingText(`+${reward}`, "gold");
+  if (correct) {
+    showFloatingText(`+${reward}`, "gold");
+  } else {
+    playWrongSound();
+  }
 }
 
 function showFloatingText(text, type) {
+  playSoundForType(type);
+  if (type === "gold") spawnGoldSparkle();
   const app = document.getElementById("app");
   if (!app) return;
   const el = document.createElement("div");
@@ -863,6 +960,62 @@ function showFloatingText(text, type) {
   el.style.top = "26%";
   app.appendChild(el);
   setTimeout(() => el.remove(), 1000);
+}
+
+function spawnParticles(options) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  const count = options.count || 12;
+  const colors = options.colors || ["#ffd54f"];
+  const originX = options.originX != null ? options.originX : 50;
+  const originY = options.originY != null ? options.originY : 30;
+  const spread = options.spread || 70;
+  const shape = options.shape || "circle";
+  const fall = Boolean(options.fall);
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    el.className = "game-particle";
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 24 + Math.random() * spread;
+    const dx = Math.cos(angle) * distance;
+    const dy = fall ? distance + Math.random() * 40 : Math.sin(angle) * distance - 16;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 6 + Math.random() * 5;
+    el.style.left = `${originX}%`;
+    el.style.top = `${originY}%`;
+    el.style.width = `${size}px`;
+    el.style.height = `${size}px`;
+    el.style.background = color;
+    el.style.borderRadius = shape === "circle" ? "50%" : "2px";
+    el.style.setProperty("--dx", `${dx}px`);
+    el.style.setProperty("--dy", `${dy}px`);
+    el.style.animationDelay = `${Math.random() * 0.15}s`;
+    app.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+}
+
+function spawnGoldSparkle() {
+  spawnParticles({
+    count: 10,
+    colors: ["#ffd54f", "#fff2b0", "#ff9f3f"],
+    originX: 50,
+    originY: 26,
+    spread: 60,
+  });
+}
+
+function spawnConfetti() {
+  spawnParticles({
+    count: 26,
+    colors: ["#ffd54f", "#ff6b6b", "#7ee787", "#4db1ff", "#c48aff"],
+    originX: 50,
+    originY: 15,
+    spread: 110,
+    shape: "rect",
+    fall: true,
+  });
 }
 
 function showEventPopup(icon, title, subtitle, duration) {
@@ -1210,7 +1363,10 @@ function searchIsland(location) {
   STATE.message = message;
   renderApp();
   if (goldFloatingText) showFloatingText(goldFloatingText, "gold");
-  if (popup) showEventPopup(popup.icon, popup.title, popup.subtitle);
+  if (popup) {
+    showEventPopup(popup.icon, popup.title, popup.subtitle);
+    if (!goldFloatingText) playDiscoverySound();
+  }
 }
 
 function attackEnemy(strong) {
@@ -1240,6 +1396,8 @@ function attackEnemy(strong) {
     if (enemyDamage) showFloatingText(`-${enemyDamage}`, "damage");
     showFloatingText(`+${goldGain}`, "gold");
     showEventPopup("🏆", `${enemy.name} Yenildi!`, `${goldGain} altın kazandın.`);
+    playVictorySound();
+    spawnConfetti();
     return;
   }
 
@@ -1324,5 +1482,10 @@ function buyItem(name) {
   STATE.message = `${item.name} satın aldın.`;
   renderApp();
 }
+
+(function initSoundToggle() {
+  const btn = document.getElementById("sound-toggle");
+  if (btn) btn.textContent = soundEnabled ? "🔊" : "🔇";
+})();
 
 renderApp();

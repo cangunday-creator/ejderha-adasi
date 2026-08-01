@@ -2,6 +2,24 @@
   position: relative;
 }
 
+.game-particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 90;
+  animation: particleFly 0.9s ease-out forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.4) rotate(180deg);
+    opacity: 0;
+  }
+}
+
 .event-popup-backdrop {
   position: fixed;
   inset: 0;
@@ -355,6 +373,24 @@ body::before {
   padding: 28px;
   position: relative;
   z-index: 1;
+}
+
+.sound-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 220;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 44, 71, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
 .scene-enter {
@@ -745,6 +781,55 @@ button.secondary:hover {
     #1f6fa8 80%,
     #0d4d78 100%
   );
+}
+
+.volcano-ember {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffcf5c, #ff5722);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  animation: emberRise 2.4s ease-in infinite;
+}
+
+@keyframes emberRise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-46px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+.cave-mist {
+  position: absolute;
+  width: 70px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 2;
+  animation: mistDrift 6s ease-in-out infinite alternate;
+}
+
+@keyframes mistDrift {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(10px);
+    opacity: 0.9;
+  }
 }
 
 .world-sea {

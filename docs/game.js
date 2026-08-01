@@ -189,6 +189,31 @@ const ENGLISH_WORDS = [
   { english: "boot", turkish: "çizme" },
 ];
 
+const WORD_EMOJI = {
+  cat: "🐱", dog: "🐶", bird: "🐦", fish: "🐟", rabbit: "🐰", horse: "🐴",
+  lion: "🦁", bear: "🐻", wolf: "🐺", dragon: "🐉", snake: "🐍", turtle: "🐢",
+  frog: "🐸", owl: "🦉", spider: "🕷️",
+  red: "🔴", blue: "🔵", green: "🟢", yellow: "🟡", black: "⚫", white: "⚪",
+  orange: "🟠", purple: "🟣", pink: "🩷", brown: "🟤",
+  one: "1️⃣", two: "2️⃣", three: "3️⃣", four: "4️⃣", five: "5️⃣",
+  six: "6️⃣", seven: "7️⃣", eight: "8️⃣", nine: "9️⃣", ten: "🔟",
+  tree: "🌳", water: "💧", fire: "🔥", stone: "🪨", mountain: "⛰️",
+  forest: "🌲", sea: "🌊", sun: "☀️", moon: "🌙", star: "⭐",
+  cloud: "☁️", rain: "🌧️", wind: "🌬️", snow: "❄️", island: "🏝️", cave: "🕳️",
+  sword: "⚔️", shield: "🛡️", key: "🔑", map: "🗺️", treasure: "💰", gold: "🪙",
+  ship: "🚢", boat: "⛵", castle: "🏰", door: "🚪", bridge: "🌉",
+  book: "📖", lamp: "🪔", hat: "🎩", boot: "👢",
+};
+
+function emojiForEnglish(word) {
+  return WORD_EMOJI[word] || "";
+}
+
+function emojiForTurkish(word) {
+  const entry = ENGLISH_WORDS.find(w => w.turkish === word);
+  return entry ? WORD_EMOJI[entry.english] || "" : "";
+}
+
 const SHOP = [
   { name: "Yara Bandı", price: 8 },
   { name: "Duman Bombası", price: 12 },
@@ -612,6 +637,7 @@ function renderEnglishPractice(app) {
             .map(
               option => `
                 <div class="card drop-zone" data-option="${option}">
+                  <p class="option-emoji">${emojiForTurkish(option)}</p>
                   <p>${option}</p>
                 </div>
               `
@@ -641,7 +667,7 @@ function renderEnglishPractice(app) {
           ${question.options
             .map(
               (option, index) =>
-                `<button class="secondary" onclick="answerEnglish(${index})">${option}</button>`
+                `<button class="secondary" onclick="answerEnglish(${index})">${emojiForEnglish(option)} ${option}</button>`
             )
             .join("")}
         </div>

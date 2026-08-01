@@ -113,9 +113,10 @@
 }
 
 .battle-hp-fill {
+  position: relative;
   height: 100%;
   background: linear-gradient(90deg, #a4e08a, #4caf7d);
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.3s ease;
 }
 
 .battle-hp-fill.enemy {
@@ -212,12 +213,54 @@ body {
     radial-gradient(circle at bottom right, rgba(77, 177, 255, 0.14), transparent 18%),
     linear-gradient(145deg, #081424 0%, #102a4b 40%, #492f16 100%);
   color: #f8f4e8;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 25% 20%, rgba(255, 200, 120, 0.1), transparent 38%),
+    radial-gradient(circle at 75% 82%, rgba(80, 180, 255, 0.09), transparent 38%);
+  animation: ambientDrift 20s ease-in-out infinite alternate;
+}
+
+@keyframes ambientDrift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-3%, 3%) scale(1.06);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(248, 184, 76, 0.5);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 184, 76, 0.8);
 }
 
 .app-shell {
   max-width: 1080px;
   margin: 0 auto;
   padding: 28px;
+  position: relative;
+  z-index: 1;
 }
 
 .scene-enter {
@@ -249,6 +292,21 @@ h1 {
   margin: 0;
   font-size: 3rem;
   letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #ffe6a8, #ff9f3f 55%, #ffd54f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(255, 184, 76, 0.35);
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.18);
+  }
 }
 
 p {
@@ -261,8 +319,10 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 18px;
   padding: 20px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 16px 40px rgba(0, 0, 0, 0.22);
   margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .section-title {
@@ -270,6 +330,19 @@ p {
   font-size: 1.6rem;
   margin-bottom: 14px;
   letter-spacing: 0.02em;
+  position: relative;
+  padding-left: 14px;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #ffd54f, #ff9f3f);
 }
 
 .scene-banner {
@@ -321,8 +394,33 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.button-grid > * {
+  animation: buttonPopIn 0.35s ease backwards;
+}
+
+.button-grid > *:nth-child(1) { animation-delay: 0.02s; }
+.button-grid > *:nth-child(2) { animation-delay: 0.07s; }
+.button-grid > *:nth-child(3) { animation-delay: 0.12s; }
+.button-grid > *:nth-child(4) { animation-delay: 0.17s; }
+.button-grid > *:nth-child(5) { animation-delay: 0.22s; }
+.button-grid > *:nth-child(6) { animation-delay: 0.27s; }
+.button-grid > *:nth-child(n+7) { animation-delay: 0.3s; }
+
+@keyframes buttonPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 button,
 .tomato {
+  position: relative;
+  overflow: hidden;
   border: none;
   border-radius: 999px;
   padding: 16px 22px;
@@ -330,6 +428,25 @@ button,
   cursor: pointer;
   transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+}
+
+button::after,
+.tomato::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+button:hover::after,
+.tomato:hover::after {
+  left: 130%;
 }
 
 button:hover,
@@ -381,6 +498,8 @@ button.secondary:hover {
   min-height: 140px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 40px rgba(0, 0, 0, 0.16);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .card:hover {
@@ -689,9 +808,38 @@ button.secondary:hover {
 }
 
 .status-fill {
+  position: relative;
   height: 100%;
   background: linear-gradient(90deg, #ffdd77, #ff9f3f);
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.3s ease;
+}
+
+.status-fill::after,
+.battle-hp-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 60%);
+}
+
+.status-fill.hp-mid,
+.battle-hp-fill.hp-mid {
+  background: linear-gradient(90deg, #ffd166, #ff9f3f);
+}
+
+.status-fill.hp-low,
+.battle-hp-fill.hp-low {
+  background: linear-gradient(90deg, #ff8a65, #ff4d4d);
+  animation: hpPulse 1s ease-in-out infinite;
+}
+
+@keyframes hpPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }
 
 footer {

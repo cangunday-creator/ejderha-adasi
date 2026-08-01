@@ -997,6 +997,35 @@ button:disabled::after {
   display: none;
 }
 
+.leaderboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 0.4fr 1.6fr 0.8fr 0.8fr 0.8fr 0.8fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.leaderboard-header {
+  background: rgba(248, 184, 76, 0.16);
+  font-weight: 700;
+  color: #ffe6b0;
+}
+
+.leaderboard-row:nth-child(2) {
+  background: rgba(255, 213, 79, 0.14);
+}
+
 .save-badge {
   display: inline-block;
   background: rgba(126, 231, 135, 0.16);

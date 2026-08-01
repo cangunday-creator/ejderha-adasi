@@ -447,7 +447,7 @@ function renderStatus() {
             </ul>
           </div>
         </div>
-        <div class="status-bar"><div class="status-fill" style="width: ${hpPercent}%;"></div></div>
+        <div class="status-bar"><div class="status-fill ${hpBarClass(hpPercent)}" style="width: ${hpPercent}%;"></div></div>
       </div>
     </div>
   `;
@@ -524,6 +524,12 @@ function renderIsland(app) {
   `;
 }
 
+function hpBarClass(percent) {
+  if (percent <= 25) return "hp-low";
+  if (percent <= 55) return "hp-mid";
+  return "";
+}
+
 function combatFxClass(hit, attacking, side) {
   if (hit && attacking) return `fx-both-${side}`;
   if (hit) return "fx-shake";
@@ -556,7 +562,7 @@ function renderBattle(app) {
         <div class="battle-combatant ${playerClasses}">
           <div class="battle-avatar">${playerAvatar}</div>
           <span class="battle-name">${player.name}</span>
-          <div class="battle-hp-bar"><div class="battle-hp-fill" style="width: ${playerHpPercent}%;"></div></div>
+          <div class="battle-hp-bar"><div class="battle-hp-fill ${hpBarClass(playerHpPercent)}" style="width: ${playerHpPercent}%;"></div></div>
         </div>
         <div class="battle-vs">⚔️</div>
         <div class="battle-combatant ${enemyClasses}">

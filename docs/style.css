@@ -520,6 +520,17 @@ button.secondary:hover {
   text-align: center;
 }
 
+.save-badge {
+  display: inline-block;
+  background: rgba(126, 231, 135, 0.16);
+  border: 1px solid rgba(126, 231, 135, 0.4);
+  color: #b7f0be;
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .status-bar {
   height: 14px;
   width: 100%;

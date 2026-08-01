@@ -258,19 +258,12 @@ function renderApp() {
 }
 
 function renderMenu(app) {
-  const saved = loadSavedGame();
-  const savedCharacter = saved ? CHARACTERS.find(c => c.key === saved.characterKey) : null;
-  const continueLabel = saved
-    ? `Kaldığın Yerden Devam Et (${savedCharacter ? savedCharacter.displayName : saved.player.name}, ${saved.player.gold} altın)`
-    : "";
-
   app.innerHTML = `
     <div class="panel">
       ${renderSceneBanner("Ejderha Adası'na hoş geldin", "Işıl Dengenin yolunu seç ve maceranın ritmini hisset.", ICONS.dragon)}
       <h2 class="section-title">Ana Menü</h2>
       <div class="button-grid">
-        ${saved ? `<button class="primary" onclick="continueGame()">${continueLabel}</button>` : ""}
-        <button class="${saved ? "secondary" : "primary"}" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
+        <button class="primary" onclick="gotoScene('character')">Karakter Seç ve Maceraya Başla</button>
         <button class="secondary" onclick="gotoScene('tutorial')">Nasıl Oynanır?</button>
         <button class="secondary" onclick="gotoScene('about')">Oyun Hakkında</button>
         <button class="secondary" onclick="gotoScene('tamamon')">Tamamon Koleksiyonu</button>
@@ -793,20 +786,25 @@ function gotoScene(scene) {
 }
 
 function renderCharacterSelection(app) {
-  const cards = CHARACTERS.map(character => `
+  const saves = loadAllSaves();
+  const cards = CHARACTERS.map(character => {
+    const save = saves[character.key];
+    return `
     <div class="card avatar-card">
       <div class="avatar-circle avatar-circle-large">${character.avatar}</div>
       <h3>${character.displayName}</h3>
       <p>${character.description}</p>
       <p><strong>HP:</strong> ${character.hp} / <strong>Saldırı:</strong> ${character.attack} / <strong>Savunma:</strong> ${character.defense}</p>
-      <button class="secondary" onclick="selectCharacter('${character.key}')">Bu karakterle devam et</button>
+      ${save ? `<p class="save-badge">💾 Kayıtlı ilerleme: ${save.gold} altın</p>` : ""}
+      <button class="secondary" onclick="selectCharacter('${character.key}')">${save ? "Kaldığın Yerden Devam Et" : "Bu karakterle devam et"}</button>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   app.innerHTML = `
     <div class="panel">
       ${renderSceneBanner("Karakter Seçimi", "Ejderha Adası için bir kahraman seç.", ICONS.hero)}
-      <p>Her karakter farklı bir oyun tarzına sahiptir. Seçim, macerana güçlü bir başlangıç sağlar.</p>
+      <p>Her karakter kendi ilerlemesini ayrı ayrı kaydeder — istediğin karakterle devam edebilirsin.</p>
       <div class="cards">${cards}</div>
       <div class="button-grid">
         <button class="primary" onclick="gotoScene('menu')">Ana Menüye Dön</button>
@@ -834,7 +832,7 @@ function renderTutorial(app) {
         </div>
         <div class="card">
           <h3>💾 Kaydet</h3>
-          <p>Köydeki "Oyunu Kaydet" butonuyla ilerlemeni kaydedebilirsin. Bir sonraki girişinde ana menüden "Kaldığın Yerden Devam Et" ile aynı yerden sürdürürsün.</p>
+          <p>Köydeki "Oyunu Kaydet" butonuyla ilerlemeni kaydedebilirsin. Her karakterin kaydı ayrıdır — karakter seçim ekranına döndüğünde, kayıtlı olan karakterlerde "Kaldığın Yerden Devam Et" yazar.</p>
         </div>
       </div>
       <div class="button-grid">
@@ -906,14 +904,18 @@ function renderAbout(app) {
 function selectCharacter(key) {
   const character = CHARACTERS.find(c => c.key === key);
   if (!character) return;
-  STATE.player = createPlayerFromCharacter(character);
+  const saves = loadAllSaves();
+  const existingSave = saves[key];
+  STATE.player = existingSave || createPlayerFromCharacter(character);
   STATE.characterKey = key;
   STATE.scene = localStorage.getItem(TUTORIAL_SEEN_KEY) ? "village" : "tutorial";
   STATE.worldPosition = { x: 50, y: 80 };
   STATE.englishMode = "menu";
   STATE.englishQuestion = null;
   STATE.currentEnemy = null;
-  STATE.message = `${character.displayName} olarak macerana başlıyorsun.`;
+  STATE.message = existingSave
+    ? `${character.displayName} olarak kaldığın yerden devam ediyorsun!`
+    : `${character.displayName} olarak macerana başlıyorsun.`;
   renderApp();
 }
 
@@ -928,37 +930,27 @@ function resetGame() {
   renderApp();
 }
 
-function saveGame() {
-  const data = {
-    characterKey: STATE.characterKey,
-    player: STATE.player,
-  };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  STATE.message = "Oyun kaydedildi! Kaldığın yerden devam edebilirsin.";
-  renderApp();
-}
-
-function loadSavedGame() {
+function loadAllSaves() {
   const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) return null;
+  if (!raw) return {};
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
   } catch (e) {
-    return null;
+    return {};
   }
 }
 
-function continueGame() {
-  const saved = loadSavedGame();
-  if (!saved) return;
-  STATE.player = saved.player;
-  STATE.characterKey = saved.characterKey;
-  STATE.scene = "village";
-  STATE.worldPosition = { x: 50, y: 80 };
-  STATE.englishMode = "menu";
-  STATE.englishQuestion = null;
-  STATE.currentEnemy = null;
-  STATE.message = "Kaldığın yerden devam ediyorsun!";
+function saveGame() {
+  if (!STATE.characterKey) {
+    STATE.message = "Kaydetmek için önce bir karakter seçmelisin.";
+    renderApp();
+    return;
+  }
+  const saves = loadAllSaves();
+  saves[STATE.characterKey] = STATE.player;
+  localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+  STATE.message = "Oyun kaydedildi! Bu karakterle kaldığın yerden devam edebilirsin.";
   renderApp();
 }
 

@@ -45,7 +45,7 @@ const CHARACTERS = [
   },
   {
     key: "denge",
-    displayName: "Denge gibi Çocuk",
+    displayName: "Denge gibi Kahraman",
     description: "Meraklı küçük maceracı. Hızı ve çevikliğiyle fark yaratır.",
     hp: 18,
     maxHp: 18,
@@ -579,7 +579,7 @@ function renderAbout(app) {
       <ul>
         <li><strong>Biçe gibi Dağcı</strong>: Güçlü ve cesur bir kaşif, daha yüksek saldırı gücüne sahip.</li>
         <li><strong>Emine gibi Doktor</strong>: Şifacı yetenekleriyle daha fazla can ve dayanıklılık sağlar.</li>
-        <li><strong>Denge gibi Çocuk</strong>: Çevik ve meraklı, farklı keşiflere uygun.</li>
+        <li><strong>Denge gibi Kahraman</strong>: Çevik ve meraklı, farklı keşiflere uygun.</li>
         <li><strong>Zekası ile öne çıkan Nur</strong>: Strateji ve bulmaca çözme konusunda avantajlı.</li>
       </ul>
       <h2 class="section-title">Nasıl Oynanır?</h2>

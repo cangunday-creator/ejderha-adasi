@@ -215,9 +215,9 @@ function emojiForTurkish(word) {
 }
 
 const SHOP = [
-  { name: "Yara Bandı", price: 8 },
-  { name: "Duman Bombası", price: 12 },
-  { name: "Güç İksiri", price: 15 },
+  { name: "Yara Bandı", price: 8, icon: "🩹" },
+  { name: "Duman Bombası", price: 12, icon: "💨" },
+  { name: "Güç İksiri", price: 15, icon: "🧪" },
 ];
 
 const SAVE_KEY = "ejderhaAdasiSave";
@@ -519,13 +519,13 @@ function renderStatus() {
           <div>
             <h2 class="section-title">${player.name}</h2>
             <ul class="stats-list">
-              <li>HP: ${player.hp}/${player.maxHp}</li>
-              <li>Saldırı: ${attack}</li>
-              <li>Savunma: ${defense}</li>
-              <li>Altın: ${player.gold}</li>
-              <li>Tamamonlar: ${player.tamamonlar.length}</li>
-              <li>Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
-              ${player.companion ? `<li>Yoldaş: ${player.companion.name}</li>` : ""}
+              <li>❤️ HP: ${player.hp}/${player.maxHp}</li>
+              <li>⚔️ Saldırı: ${attack}</li>
+              <li>🛡️ Savunma: ${defense}</li>
+              <li>🪙 Altın: ${player.gold}</li>
+              <li>🐾 Tamamonlar: ${player.tamamonlar.length}</li>
+              <li>✨ Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
+              ${player.companion ? `<li>🤝 Yoldaş: ${player.companion.name}</li>` : ""}
             </ul>
           </div>
         </div>
@@ -685,21 +685,34 @@ const TYPE_COLORS = {
 };
 
 function renderTamamon(app) {
-  const cards = STATE.player.tamamonlar
-    .map(t => `
+  const owned = STATE.player.tamamonlar;
+  const cards = TAMAMONLAR.map(t => {
+    const found = owned.find(o => o.name === t.name);
+    if (found) {
+      return `
       <div class="card" style="border-left: 4px solid ${TYPE_COLORS[t.type] || "#f8b84c"};">
         <h3>${t.emoji} ${t.name}</h3>
         <p><strong>Tip:</strong> <span style="color: ${TYPE_COLORS[t.type] || "#f8b84c"};">${t.type}</span></p>
         <p>${t.description}</p>
       </div>
-    `)
-    .join("");
+    `;
+    }
+    return `
+      <div class="card tamamon-locked">
+        <h3>❓ ???</h3>
+        <p><strong>Tip:</strong> Bilinmiyor</p>
+        <p>Henüz keşfedilmedi — adada aramaya devam et.</p>
+      </div>
+    `;
+  }).join("");
 
   app.innerHTML = `
     ${renderStatus()}
     <div class="panel">
       ${renderSceneBanner("Tamamon Koleksiyonun", "Adada bulduğun sadık dostlarının hepsi burada.", ICONS.tamamon)}
-      ${cards || '<p>Henüz hiçbir Tamamon toplamadın. Adayı keşfetmeye başla!</p>'}
+      <p class="objective-hint">🐾 ${owned.length}/${TAMAMONLAR.length} Tamamon topladın</p>
+      <div class="status-bar"><div class="status-fill" style="width: ${(owned.length / TAMAMONLAR.length) * 100}%;"></div></div>
+      <div class="cards" style="margin-top: 16px;">${cards}</div>
       <div class="button-grid">
         <button class="primary" onclick="gotoScene('village')">Kasabaya Geri Dön</button>
         <button class="secondary" onclick="gotoScene('island')">Adayı Keşfet</button>
@@ -1086,14 +1099,19 @@ function recruitBasak() {
 }
 
 function renderShop(app) {
-  const list = SHOP.map(item => `
-    <div class="card">
+  const affordable = STATE.player.gold;
+  const list = SHOP.map(item => {
+    const canAfford = affordable >= item.price;
+    return `
+    <div class="card avatar-card ${canAfford ? "" : "shop-item-locked"}">
+      <div class="avatar-circle avatar-circle-large shop-item-icon">${item.icon}</div>
       <h3>${item.name}</h3>
       <p>Fiyat: ${item.price} altın</p>
       <p>${ITEMS[item.name].description}</p>
-      <button class="secondary" onclick="buyItem('${item.name}')">Satın Al</button>
+      <button class="secondary" onclick="buyItem('${item.name}')" ${canAfford ? "" : "disabled"}>${canAfford ? "Satın Al" : "Yeterli Altın Yok"}</button>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   app.innerHTML = `
     ${renderStatus()}
@@ -1308,9 +1326,12 @@ function saveGame() {
 }
 
 function healAtVillage() {
+  const before = STATE.player.hp;
   STATE.player.hp = Math.min(STATE.player.maxHp, STATE.player.hp + 10);
+  const healed = STATE.player.hp - before;
   STATE.message = "Dinlendin ve canının bir kısmını geri kazandın.";
   renderApp();
+  if (healed > 0) showFloatingText(`+${healed}`, "heal");
 }
 
 function searchIsland(location) {

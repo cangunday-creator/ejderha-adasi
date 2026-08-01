@@ -865,6 +865,33 @@ function showFloatingText(text, type) {
   setTimeout(() => el.remove(), 1000);
 }
 
+function showEventPopup(icon, title, subtitle, duration) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  const backdrop = document.createElement("div");
+  backdrop.className = "event-popup-backdrop";
+  backdrop.innerHTML = `
+    <div class="event-popup">
+      <div class="event-popup-icon">${icon}</div>
+      <p class="event-popup-title">${title}</p>
+      ${subtitle ? `<p class="event-popup-subtitle">${subtitle}</p>` : ""}
+    </div>
+  `;
+
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    const popup = backdrop.querySelector(".event-popup");
+    popup.classList.add("event-popup-exit");
+    setTimeout(() => backdrop.remove(), 250);
+  };
+
+  backdrop.addEventListener("click", dismiss);
+  app.appendChild(backdrop);
+  setTimeout(dismiss, duration || 1700);
+}
+
 function shuffleArray(array) {
   const copy = [...array];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -1138,22 +1165,26 @@ function searchIsland(location) {
   const player = STATE.player;
   let message = ` ${location} aranmaya başlandı.`;
   let goldFloatingText = null;
+  let popup = null;
 
   if (!player.hasTalisman && Math.random() < 0.2) {
     player.hasTalisman = true;
     player.maxHp += 5;
     player.hp = Math.min(player.maxHp, player.hp + 5);
     message = ` ${location} içinde kayıp tılsımı buldun! Canın ve gücün arttı.`;
+    popup = { icon: "✨", title: "Kayıp Tılsımı Buldun!", subtitle: "Canın ve gücün arttı." };
   } else if (Math.random() < 0.2) {
     const goldFound = Math.floor(Math.random() * 6 + 5);
     player.gold += goldFound;
     message = ` ${location} içinde parlayan bir hazine buldun ve ${goldFound} altın kazandın.`;
     goldFloatingText = `+${goldFound}`;
+    popup = { icon: "💰", title: "Hazine Bulundu!", subtitle: `${goldFound} altın kazandın.` };
   } else if (Math.random() < 0.3) {
     const tamamon = TAMAMONLAR[Math.floor(Math.random() * TAMAMONLAR.length)];
     if (!player.tamamonlar.some(t => t.name === tamamon.name)) {
       player.tamamonlar.push(tamamon);
       message = ` ${tamamon.emoji} ${tamamon.name} ile karşılaştın ve onu topladın.`;
+      popup = { icon: tamamon.emoji, title: "Yeni Tamamon!", subtitle: `${tamamon.name} koleksiyonuna katıldı.` };
     } else {
       message = ` ${tamamon.emoji} ${tamamon.name} zaten koleksiyonunda var.`;
     }
@@ -1179,6 +1210,7 @@ function searchIsland(location) {
   STATE.message = message;
   renderApp();
   if (goldFloatingText) showFloatingText(goldFloatingText, "gold");
+  if (popup) showEventPopup(popup.icon, popup.title, popup.subtitle);
 }
 
 function attackEnemy(strong) {
@@ -1207,6 +1239,7 @@ function attackEnemy(strong) {
     renderApp();
     if (enemyDamage) showFloatingText(`-${enemyDamage}`, "damage");
     showFloatingText(`+${goldGain}`, "gold");
+    showEventPopup("🏆", `${enemy.name} Yenildi!`, `${goldGain} altın kazandın.`);
     return;
   }
 

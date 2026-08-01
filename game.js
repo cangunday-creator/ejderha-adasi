@@ -1,3 +1,8 @@
+const BASAK = {
+  name: "Başak",
+  description: "Sevimli ve cesur bir yol arkadaşı. Yanındayken saldırın ve savunman güçlenir.",
+};
+
 const INITIAL_PLAYER = {
   name: "Maceracı",
   hp: 24,
@@ -8,6 +13,7 @@ const INITIAL_PLAYER = {
   inventory: ["Yara Bandı", "Duman Bombası"],
   tamamonlar: [],
   hasTalisman: false,
+  companion: null,
 };
 
 const CHARACTERS = [
@@ -76,6 +82,7 @@ function createPlayerFromCharacter(character) {
     inventory: [...character.inventory],
     tamamonlar: JSON.parse(JSON.stringify(character.tamamonlar)),
     hasTalisman: character.hasTalisman,
+    companion: null,
   };
 }
 
@@ -163,6 +170,7 @@ const scenes = {
   shop: renderShop,
   english: renderEnglishPractice,
   about: renderAbout,
+  basak: renderBasak,
   end: renderEnd,
 };
 
@@ -201,8 +209,8 @@ function renderSceneBanner(title, subtitle) {
 
 function renderStatus() {
   const player = STATE.player;
-  const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length;
-  const defense = player.defense;
+  const attack = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
+  const defense = player.defense + (player.companion ? 1 : 0);
   const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
   return `
     <div class="panel">
@@ -216,6 +224,7 @@ function renderStatus() {
             <li>Altın: ${player.gold}</li>
             <li>Tamamonlar: ${player.tamamonlar.length}</li>
             <li>Tılsım: ${player.hasTalisman ? "Evet" : "Hayır"}</li>
+            ${player.companion ? `<li>Yoldaş: ${player.companion.name}</li>` : ""}
           </ul>
         </div>
         <div class="status-bar"><div class="status-fill" style="width: ${hpPercent}%;"></div></div>
@@ -235,6 +244,7 @@ function renderVillage(app) {
         <button class="primary" onclick="gotoScene('shop')">Pazar Yeri</button>
         <button class="secondary" onclick="gotoScene('tamamon')">Tamamon Koleksiyonu</button>
         <button class="secondary" onclick="gotoScene('english')">İngilizce Kartları</button>
+        <button class="secondary" onclick="gotoScene('basak')">Başak ile Tanış</button>
         <button class="secondary" onclick="gotoScene('island')">Ejderha Adası'na Git</button>
         <button class="secondary" onclick="healAtVillage()">Dinlen (+10 HP)</button>
         <button class="secondary" onclick="gotoScene('menu')">Ana Menü</button>
@@ -460,6 +470,37 @@ function shuffleArray(array) {
   return copy;
 }
 
+function renderBasak(app) {
+  const player = STATE.player;
+  const already = Boolean(player.companion);
+  app.innerHTML = `
+    ${renderStatus()}
+    <div class="panel">
+      ${renderSceneBanner("Sevimli Kız Başak", "Kasabanın kenarında duran neşeli bir kız seni fark ediyor.")}
+      <div class="card">
+        <h3>Başak</h3>
+        <p>${BASAK.description}</p>
+        <p>"Merhaba! Ben Başak. Ejderha Adası'na gidiyorsan sana katılabilirim, birlikte daha güçlü oluruz!"</p>
+      </div>
+      <div class="button-grid">
+        ${already
+          ? '<p>Başak zaten yol arkadaşın!</p>'
+          : '<button class="primary" onclick="recruitBasak()">Evet, yol arkadaşım olsun</button><button class="secondary" onclick="gotoScene(\'village\')">Belki daha sonra</button>'}
+        <button class="secondary" onclick="gotoScene('village')">Kasabaya Dön</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p>${STATE.message}</p>
+    </div>
+  `;
+}
+
+function recruitBasak() {
+  STATE.player.companion = { ...BASAK };
+  STATE.message = "Başak artık senin yol arkadaşın! Maceranda saldırın ve savunman güçlendi.";
+  gotoScene("village");
+}
+
 function renderShop(app) {
   const list = SHOP.map(item => `
     <div class="card">
@@ -544,7 +585,7 @@ function renderAbout(app) {
       <h2 class="section-title">Nasıl Oynanır?</h2>
       <ul>
         <li><strong>Karakter seçimi</strong> ile oyuna başla. Her karakter farklı başlangıç istatistiklerine sahiptir.</li>
-        <li><strong>Kasabada</strong> dinlenebilir, pazar yerine gidebilir, Tamamon koleksiyonuna bakabilir veya İngilizce oyunlarına geçebilirsin.</li>
+        <li><strong>Kasabada</strong> dinlenebilir, pazar yerine gidebilir, Tamamon koleksiyonuna bakabilir, İngilizce oyunlarına geçebilir veya Başak ile tanışıp onu yol arkadaşın yapabilirsin.</li>
         <li><strong>Adayı keşfet</strong>: Mağara, harabe, kıyı ve volkan bölgelerinde farklı olaylar yaşanır. Hazine bulabilir, Tamamon yakalayabilir veya düşmanlarla karşılaşabilirsin.</li>
         <li><strong>Savaş</strong> sırasında normal saldırı, güçlü darbe, eşya kullanma veya kaçma seçeneklerini kullanabilirsin.</li>
         <li><strong>Altın kazan</strong> için sadece İngilizce oynaman gerekmez. Keşifler, savaşlar ve İngilizce mini oyunları seni ödüllendirir.</li>
@@ -638,7 +679,7 @@ function searchIsland(location) {
 function attackEnemy(strong) {
   const player = STATE.player;
   const enemy = STATE.currentEnemy;
-  const attackValue = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length;
+  const attackValue = player.attack + (player.hasTalisman ? 1 : 0) + player.tamamonlar.length + (player.companion ? 2 : 0);
   let damage = attackValue + (strong ? Math.floor(Math.random() * 3 + 2) : Math.floor(Math.random() * 3));
   if (strong && Math.random() > 0.85) {
     STATE.message = "Güçlü darbe başarısız oldu.";
@@ -664,7 +705,8 @@ function enemyAttack() {
   const player = STATE.player;
   const enemy = STATE.currentEnemy;
   const attackValue = enemy.attack + Math.floor(Math.random() * 3);
-  const damage = Math.max(1, attackValue - player.defense);
+  const defenseValue = player.defense + (player.companion ? 1 : 0);
+  const damage = Math.max(1, attackValue - defenseValue);
   player.hp -= damage;
   STATE.message += ` Düşman ${damage} hasar verdi.`;
 

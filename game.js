@@ -396,6 +396,7 @@ const STATE = {
   playerHit: false,
   playerAttacking: false,
   enemyAttacking: false,
+  showItemMenu: false,
 };
 
 const VILLAGE_DOORS = [
@@ -724,10 +725,12 @@ function renderBattle(app) {
         <p>Saldırı: ${enemy.attack} / Savunma: ${enemy.defense}</p>
       </div>
       <div class="button-grid">
-        <button class="primary" onclick="attackEnemy(false)">Normal Saldırı</button>
-        <button class="secondary" onclick="attackEnemy(true)">Güçlü Darbe</button>
-        <button class="secondary" onclick="useItem()">Eşya Kullan</button>
-        <button class="secondary" onclick="fleeBattle()">Kaç</button>
+        ${STATE.showItemMenu ? renderItemMenuButtons(player) : `
+          <button class="primary" onclick="attackEnemy(false)">Normal Saldırı</button>
+          <button class="secondary" onclick="attackEnemy(true)">Güçlü Darbe</button>
+          <button class="secondary" onclick="openItemMenu()">Eşya Kullan</button>
+          <button class="secondary" onclick="fleeBattle()">Kaç</button>
+        `}
       </div>
     </div>
     <div class="panel">
@@ -1367,6 +1370,8 @@ function syncToLeaderboard() {
   }).catch(() => {});
 }
 
+let leaderboardListenerAttached = false;
+
 function loadLeaderboard() {
   const container = document.getElementById("leaderboard-container");
   if (!container) return;
@@ -1374,6 +1379,20 @@ function loadLeaderboard() {
     container.innerHTML = "<p>Skor tablosu şu an kullanılamıyor.</p>";
     return;
   }
+
+  if (!leaderboardListenerAttached) {
+    leaderboardListenerAttached = true;
+    firebaseDb.ref("players").on(
+      "value",
+      snapshot => renderLeaderboardTable(snapshot.val() || {}),
+      () => {
+        const el = document.getElementById("leaderboard-container");
+        if (el) el.innerHTML = "<p>Skor tablosu yüklenemedi.</p>";
+      }
+    );
+    return;
+  }
+
   firebaseDb.ref("players").once("value")
     .then(snapshot => renderLeaderboardTable(snapshot.val() || {}))
     .catch(() => {
@@ -1391,6 +1410,7 @@ function renderLeaderboardTable(data) {
     return;
   }
   rows.sort((a, b) => (b.gold || 0) - (a.gold || 0));
+  const medals = ["🥇", "🥈", "🥉"];
   container.innerHTML = `
     <div class="leaderboard-table">
       <div class="leaderboard-row leaderboard-header">
@@ -1402,9 +1422,9 @@ function renderLeaderboardTable(data) {
         <span>🏆 Zafer</span>
       </div>
       ${rows.map((r, i) => `
-        <div class="leaderboard-row">
-          <span>${i + 1}</span>
-          <span>${r.displayName || r.key}</span>
+        <div class="leaderboard-row ${r.key === STATE.characterKey ? "leaderboard-you" : ""}">
+          <span>${medals[i] || i + 1}</span>
+          <span>${r.displayName || r.key}${r.key === STATE.characterKey ? " (Sen)" : ""}</span>
           <span>${r.gold || 0}</span>
           <span>${r.tamamonCount || 0}</span>
           <span>${r.hasTalisman ? "Evet" : "Hayır"}</span>
@@ -1462,6 +1482,7 @@ function searchIsland(location) {
     STATE.currentEnemy = JSON.parse(JSON.stringify(enemy));
     STATE.currentEnemy.maxHp = STATE.currentEnemy.hp;
     STATE.scene = "battle";
+    STATE.showItemMenu = false;
     STATE.message = location === "Kıyı"
       ? " Dalgalar arasından bir Deniz Canavarı fırladı!"
       : ` ${message} Düşman ortaya çıktı!`;
@@ -1537,31 +1558,69 @@ function enemyAttack() {
   return damage;
 }
 
-function useItem() {
-  const player = STATE.player;
-  if (!player.inventory.length) {
-    STATE.message = "Envanterinde kullanabileceğin bir eşya yok.";
-    renderApp();
-    return;
+function countItems(inventory) {
+  const counts = {};
+  inventory.forEach(name => {
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  return counts;
+}
+
+function itemIcon(name) {
+  const shopEntry = SHOP.find(i => i.name === name);
+  return shopEntry ? shopEntry.icon : "🎒";
+}
+
+function renderItemMenuButtons(player) {
+  const counts = countItems(player.inventory);
+  const names = Object.keys(counts);
+  if (names.length === 0) {
+    return `
+      <p>Envanterinde kullanabileceğin bir eşya yok.</p>
+      <button class="secondary" onclick="closeItemMenu()">Geri Dön</button>
+    `;
   }
-  const item = player.inventory.shift();
-  const itemType = ITEMS[item].type;
+  return `
+    ${names.map(name => `
+      <button class="secondary" onclick="useSpecificItem('${name}')">${itemIcon(name)} ${name} (${counts[name]})</button>
+    `).join("")}
+    <button class="secondary" onclick="closeItemMenu()">Vazgeç</button>
+  `;
+}
+
+function openItemMenu() {
+  STATE.showItemMenu = true;
+  renderApp();
+}
+
+function closeItemMenu() {
+  STATE.showItemMenu = false;
+  renderApp();
+}
+
+function useSpecificItem(name) {
+  const player = STATE.player;
+  const index = player.inventory.indexOf(name);
+  if (index === -1) return;
+  player.inventory.splice(index, 1);
+  STATE.showItemMenu = false;
+  const itemType = ITEMS[name].type;
   let healAmount = 0;
   if (itemType === "heal") {
-    healAmount = ITEMS[item].value;
+    healAmount = ITEMS[name].value;
     player.hp = Math.min(player.maxHp, player.hp + healAmount);
-    STATE.message = `${item} kullandın. ${healAmount} can yeniledin.`;
+    STATE.message = `${name} kullandın. ${healAmount} can yeniledin.`;
   } else if (itemType === "escape") {
     if (Math.random() < 0.7) {
       STATE.scene = "village";
       STATE.currentEnemy = null;
-      STATE.message = `${item} kullanarak savaştan kaçtın.`;
+      STATE.message = `${name} kullanarak savaştan kaçtın.`;
     } else {
-      STATE.message = `${item} başarısız oldu.`;
+      STATE.message = `${name} başarısız oldu.`;
     }
   } else if (itemType === "boost") {
-    player.attack += ITEMS[item].value;
-    STATE.message = `${item} kullandın. Saldırın geçici olarak arttı.`;
+    player.attack += ITEMS[name].value;
+    STATE.message = `${name} kullandın. Saldırın geçici olarak arttı.`;
   }
   renderApp();
   if (itemType === "heal") showFloatingText(`+${healAmount}`, "heal");
